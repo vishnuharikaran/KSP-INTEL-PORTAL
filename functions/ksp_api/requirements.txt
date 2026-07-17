@@ -1,0 +1,6 @@
+fastapi
+mangum
+zcatalyst-sdk
+scikit-learn
+pandas
+numpy
