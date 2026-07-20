@@ -190,7 +190,7 @@ function NetworkGraph() {
         if (burnerPathActive && d.type === 'imei') return '#ff9500';
         if (d.type === 'imei') return '#d35400';
         if (d.type === 'behavioral') return '#2980b9';
-        return 'var(--border)';
+        return '#34495e';
       })
       .attr("stroke-width", d => {
         if (burnerPathActive && d.type === 'imei') return 3;
