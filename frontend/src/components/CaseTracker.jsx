@@ -217,9 +217,9 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
   };
 
   const getIntegrityColor = (status) => {
-    if (status === "Intact") return "#00ff88";
-    if (status === "Compromised") return "#ff2d55";
-    return "#ffaa00";
+    if (status === "Intact") return "var(--green)";
+    if (status === "Compromised") return "var(--red)";
+    return "var(--amber)";
   };
 
   const stagesOrder = ["FIR Filed", "Investigation", "Arrest", "Chargesheet", "Court Hearing", "Verdict"];
@@ -263,10 +263,10 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
         <div className="chart-card" style={styles.timelineCard}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Scale size={18} color="#00e5ff" />
+              <Scale size={18} color="var(--cyan)" />
               <span className="chart-title">CASE RETRIEVAL DOSSIER — {trackedCase.id}</span>
             </div>
-            <span className="badge" style={{ backgroundColor: trackedCase.status === "Closed" ? 'rgba(0,255,136,0.08)' : 'rgba(255,170,0,0.08)', color: trackedCase.status === "Closed" ? '#00ff88' : '#ffaa00' }}>
+            <span className="badge" style={{ backgroundColor: trackedCase.status === "Closed" ? 'rgba(0,255,136,0.08)' : 'rgba(255,170,0,0.08)', color: trackedCase.status === "Closed" ? 'var(--green)' : 'var(--amber)' }}>
               {trackedCase.status.toUpperCase()}
             </span>
           </div>
@@ -287,14 +287,14 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
             </div>
             <div>
               <span style={styles.metaLabel}>CURRENT ACTIVE PROCESS</span>
-              <span style={{ ...styles.metaValue, color: '#ffaa00' }}>{trackedCase.current_stage.toUpperCase()}</span>
+              <span style={{ ...styles.metaValue, color: 'var(--amber)' }}>{trackedCase.current_stage.toUpperCase()}</span>
             </div>
           </div>
 
           {/* 4 STAGES VERTICAL STEPPER */}
           <div style={{ position: 'relative', margin: '30px 0', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Vertical connector line */}
-            <div style={{ position: 'absolute', left: '26px', top: '10px', bottom: '10px', width: '2px', backgroundColor: '#1e2d3d', zIndex: 0 }} />
+            <div style={{ position: 'absolute', left: '26px', top: '10px', bottom: '10px', width: '2px', backgroundColor: 'var(--border)', zIndex: 0 }} />
 
             {[
               { id: 1, label: "FIR", tab: "FIR Filed", subtitle: "First Information Report filing" },
@@ -305,9 +305,9 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
               const state = getStepState(step.id); // "done", "current", "future"
               const stageData = trackedCase.stages[step.tab];
               
-              let color = "rgba(255,255,255,0.3)";
+              let color = "var(--text-dim)";
               let dotBg = "#070a12";
-              let dotBorder = "2px solid #1e2d3d";
+              let dotBorder = "2px solid var(--border)";
               let dotContent = null;
 
               if (state === "done") {
@@ -345,7 +345,7 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
                     <span style={{ fontSize: '12px', fontWeight: 'bold', color, letterSpacing: '0.5px' }}>{step.label.toUpperCase()}</span>
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--text-label)' }}>
                       {step.subtitle} • {stageData ? stageData.date : (state === "done" ? "Completed" : "Pending")}
                     </span>
                   </div>
@@ -358,7 +358,7 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
           <div style={styles.detailContainer}>
             <div style={styles.detailHeader}>
               <span style={styles.detailTitle}>TIMELINE PROGRESSION DETAILS — {activeStageTab.toUpperCase()}</span>
-              <span className="badge" style={{ backgroundColor: 'rgba(0, 229, 255, 0.05)', color: '#00e5ff' }}>
+              <span className="badge" style={{ backgroundColor: 'rgba(0, 229, 255, 0.05)', color: 'var(--cyan)' }}>
                 {trackedCase.stages[activeStageTab]?.status.toUpperCase()}
               </span>
             </div>
@@ -437,8 +437,8 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
           {/* CASE FILES SECTION (RENDERED ONLY FOR CLOSED/ARRESTED CASES) */}
           {isCaseClosedOrArrested && (
             <div style={styles.docsSection}>
-              <div style={{ borderBottom: '1px solid #1e2d3d', paddingBottom: '6px', marginBottom: '12px' }}>
-                <span style={styles.sectionLabel} style={{ ...styles.sectionLabel, color: '#00e5ff', fontSize: '11px', fontWeight: 'bold' }}>
+              <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '6px', marginBottom: '12px' }}>
+                <span style={styles.sectionLabel} style={{ ...styles.sectionLabel, color: 'var(--cyan)', fontSize: '11px', fontWeight: 'bold' }}>
                   CASE FILES & SECURED CUSTODY ARCHIVES
                 </span>
               </div>
@@ -465,7 +465,7 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
                       <tbody>
                         {caseEvidence.map(ev => (
                           <tr key={ev.EvidenceID}>
-                            <td className="mono" style={{ color: '#00e5ff' }}>{ev.EvidenceID}</td>
+                            <td className="mono" style={{ color: 'var(--cyan)' }}>{ev.EvidenceID}</td>
                             <td>{ev.EvidenceType}</td>
                             <td>{ev.AnalysisStatus}</td>
                             <td style={{ color: getIntegrityColor(ev.IntegrityStatus), fontWeight: 'bold' }}>{ev.IntegrityStatus}</td>
@@ -497,7 +497,7 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
                     { label: "Forensic Report", doc: "Forensic Report" }
                   ].map((item, idx) => (
                     <div key={idx} style={styles.docCard}>
-                      <FileText size={16} color="#00e5ff" />
+                      <FileText size={16} color="var(--cyan)" />
                       <div style={styles.docMeta}>
                         <span style={styles.docName}>{item.label}</span>
                         <span style={styles.docFormat}>Format: SECURE TEXT</span>
@@ -546,7 +546,7 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
               <tbody>
                 {recentCases.map(c => (
                   <tr key={c.id}>
-                    <td className="mono" style={{ color: '#00e5ff', fontWeight: 'bold' }}>{c.id}</td>
+                    <td className="mono" style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>{c.id}</td>
                     <td>{c.crime_type}</td>
                     <td>{c.victim_district}</td>
                     <td className="mono">{c.date_of_incident}</td>
@@ -555,7 +555,7 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
                         className="badge" 
                         style={{ 
                           backgroundColor: c.status === "Closed" ? 'rgba(0, 255, 136, 0.08)' : 'rgba(255, 170, 0, 0.08)',
-                          color: c.status === "Closed" ? '#00ff88' : '#ffaa00'
+                          color: c.status === "Closed" ? 'var(--green)' : 'var(--amber)'
                         }}
                       >
                         {c.status}
@@ -582,8 +582,8 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
       {viewDoc && (
         <div style={styles.modalOverlay}>
           <div className="chart-card" style={styles.modalContainer}>
-            <div className="chart-header" style={{ borderBottom: '1px solid #1e2d3d', paddingBottom: '10px', marginBottom: '14px' }}>
-              <span className="chart-title" style={{ color: '#00e5ff' }}>{viewDoc.name.toUpperCase()} — {trackedCase.id}</span>
+            <div className="chart-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '14px' }}>
+              <span className="chart-title" style={{ color: 'var(--cyan)' }}>{viewDoc.name.toUpperCase()} — {trackedCase.id}</span>
               <button className="cyber-btn-outline" onClick={() => setViewDoc(null)} style={{ padding: '3px 8px', fontSize: '9px' }}>
                 CLOSE
               </button>
@@ -599,14 +599,14 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
       {viewEvidenceDetail && (
         <div style={styles.modalOverlay}>
           <div className="chart-card" style={styles.modalContainer}>
-            <div className="chart-header" style={{ borderBottom: '1px solid #1e2d3d', paddingBottom: '10px', marginBottom: '14px' }}>
-              <span className="chart-title" style={{ color: '#00e5ff' }}>EVIDENCE CHAIN OF CUSTODY — {viewEvidenceDetail.EvidenceID}</span>
+            <div className="chart-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '14px' }}>
+              <span className="chart-title" style={{ color: 'var(--cyan)' }}>EVIDENCE CHAIN OF CUSTODY — {viewEvidenceDetail.EvidenceID}</span>
               <button className="cyber-btn-outline" onClick={() => setViewEvidenceDetail(null)} style={{ padding: '3px 8px', fontSize: '9px' }}>
                 CLOSE
               </button>
             </div>
             <div style={styles.detailsGrid}>
-              <div><strong>Evidence ID:</strong> <span className="mono" style={{ color: '#00e5ff' }}>{viewEvidenceDetail.EvidenceID}</span></div>
+              <div><strong>Evidence ID:</strong> <span className="mono" style={{ color: 'var(--cyan)' }}>{viewEvidenceDetail.EvidenceID}</span></div>
               <div><strong>Associated Case:</strong> <span className="mono">{viewEvidenceDetail.CaseID}</span></div>
               <div><strong>Category Type:</strong> {viewEvidenceDetail.EvidenceType}</div>
               <div><strong>Collected By:</strong> {viewEvidenceDetail.CollectedBy}</div>
@@ -614,7 +614,7 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
               <div><strong>Storage Zone Location:</strong> {viewEvidenceDetail.StorageLocation}</div>
               <div><strong>Analysis Queue:</strong> {viewEvidenceDetail.AnalysisStatus}</div>
               <div><strong>Integrity status:</strong> <span style={{ color: getIntegrityColor(viewEvidenceDetail.IntegrityStatus), fontWeight: 'bold' }}>{viewEvidenceDetail.IntegrityStatus}</span></div>
-              <div style={{ gridColumn: 'span 2', fontSize: '13px', borderTop: '1px solid #1e2d3d', paddingTop: '10px', marginTop: '10px', color: viewEvidenceDetail.CourtAdmissible ? '#00ff88' : '#ff2d55', fontWeight: 'bold' }}>
+              <div style={{ gridColumn: 'span 2', fontSize: '13px', borderTop: '1px solid var(--border)', paddingTop: '10px', marginTop: '10px', color: viewEvidenceDetail.CourtAdmissible ? 'var(--green)' : 'var(--red)', fontWeight: 'bold' }}>
                 COURT ADMISSIBILITY: {viewEvidenceDetail.CourtAdmissible ? "VERIFIED ADMISSIBLE" : "INADMISSIBLE"}
               </div>
             </div>
@@ -633,8 +633,8 @@ const styles = {
     gap: '20px',
   },
   searchCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '16px 20px',
   },
   searchForm: {
@@ -654,7 +654,7 @@ const styles = {
     gap: '8px',
     height: '38px',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '0 10px',
     borderRadius: '4px',
   },
@@ -667,16 +667,16 @@ const styles = {
     outline: 'none',
   },
   timelineCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     padding: '20px',
   },
   metaStrip: {
     display: 'flex',
     justifyContent: 'space-between',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '12px 20px',
     alignItems: 'center',
     flexWrap: 'wrap',
@@ -704,7 +704,7 @@ const styles = {
     left: '8%',
     right: '8%',
     height: '2px',
-    background: '#1e2d3d',
+    background: 'var(--border)',
     zIndex: 1,
   },
   stepperGrid: {
@@ -723,7 +723,7 @@ const styles = {
     width: '24px',
     height: '24px',
     borderRadius: '50%',
-    backgroundColor: '#00e5ff',
+    backgroundColor: 'var(--cyan)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -734,7 +734,7 @@ const styles = {
     height: '24px',
     borderRadius: '50%',
     backgroundColor: 'rgba(255, 170, 0, 0.2)',
-    border: '2px solid #ffaa00',
+    border: '2px solid var(--amber)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -745,14 +745,14 @@ const styles = {
     width: '10px',
     height: '10px',
     borderRadius: '50%',
-    backgroundColor: '#ffaa00',
+    backgroundColor: 'var(--amber)',
   },
   nodePending: {
     width: '24px',
     height: '24px',
     borderRadius: '50%',
     backgroundColor: '#070a12',
-    border: '2px solid #1e2d3d',
+    border: '2px solid var(--border)',
     marginBottom: '8px',
   },
   nodeName: {
@@ -768,14 +768,14 @@ const styles = {
   },
   detailContainer: {
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     marginTop: '20px',
   },
   detailHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottom: '1px solid #1e2d3d',
+    borderBottom: '1px solid var(--border)',
     padding: '10px 16px',
   },
   detailTitle: {
@@ -815,7 +815,7 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '10px 14px',
   },
   docMeta: {
@@ -833,8 +833,8 @@ const styles = {
     color: '#4f616d',
   },
   recentCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
   },
   emptyState: {
     textAlign: 'center',
@@ -854,23 +854,23 @@ const styles = {
   },
   modalContainer: {
     width: '560px',
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     padding: '24px',
   },
   modalDocBody: {
     maxHeight: '400px',
     overflowY: 'auto',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '16px',
   },
   docTextPre: {
     margin: 0,
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: '11px',
-    color: '#00ff88',
+    color: 'var(--green)',
     whiteSpace: 'pre-wrap',
     lineHeight: '1.5',
   },
@@ -878,9 +878,9 @@ const styles = {
     position: 'fixed',
     bottom: '24px',
     right: '24px',
-    backgroundColor: '#0d1117',
-    border: '1px solid #00ff88',
-    borderLeft: '4px solid #00ff88',
+    backgroundColor: 'var(--bg-panel)',
+    border: '1px solid var(--green)',
+    borderLeft: '4px solid var(--green)',
     color: '#ffffff',
     padding: '12px 20px',
     fontFamily: 'sans-serif',

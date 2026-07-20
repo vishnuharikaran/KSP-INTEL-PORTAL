@@ -155,35 +155,35 @@ function EvidenceLocker() {
 
   const getPurposeColor = (purpose) => {
     switch (purpose) {
-      case "Collection": return "#00e5ff"; // cyan
-      case "Transfer": return "#ffaa00"; // amber
-      case "Analysis": return "#bf5af2"; // purple
-      default: return "#00ff88"; // Court (green)
+      case "Collection": return "var(--cyan)"; // cyan
+      case "Transfer": return "var(--amber)"; // amber
+      case "Analysis": return "var(--purple)"; // purple
+      default: return "var(--green)"; // Court (green)
     }
   };
 
   const getIntegrityBadgeStyles = (status) => {
     if (status === "Intact") {
-      return { backgroundColor: 'rgba(0, 255, 136, 0.08)', color: '#00ff88', borderColor: 'rgba(0, 255, 136, 0.2)' };
+      return { backgroundColor: 'rgba(0, 255, 136, 0.08)', color: 'var(--green)', borderColor: 'rgba(0, 255, 136, 0.2)' };
     }
     if (status === "Compromised") {
       return { 
-        backgroundColor: 'rgba(255, 45, 85, 0.1)', 
-        color: '#ff2d55', 
+        backgroundColor: 'var(--red-bg)', 
+        color: 'var(--red)', 
         borderColor: 'rgba(255, 45, 85, 0.2)',
         animation: 'pulse 1.5s infinite' 
       };
     }
-    return { backgroundColor: 'rgba(255, 170, 0, 0.08)', color: '#ffaa00', borderColor: 'rgba(255, 170, 0, 0.2)' };
+    return { backgroundColor: 'rgba(255, 170, 0, 0.08)', color: 'var(--amber)', borderColor: 'rgba(255, 170, 0, 0.2)' };
   };
 
-  const pieColors = ['#00e5ff', '#bf5af2', '#ffaa00', '#ff6b35', '#ff2d55', '#00ff88', '#34c759', '#007aff', '#ff9500', '#af52de'];
+  const pieColors = ['var(--cyan)', 'var(--purple)', 'var(--amber)', '#ff6b35', 'var(--red)', 'var(--green)', '#34c759', '#007aff', '#ff9500', '#af52de'];
 
   if (loading && !stats) {
     return (
       <div style={styles.centeredState}>
         <div style={styles.loader}></div>
-        <div style={{ color: '#00e5ff', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>
+        <div style={{ color: 'var(--cyan)', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>
           FETCHING INTELLIGENCE DATA...
         </div>
       </div>
@@ -218,17 +218,17 @@ function EvidenceLocker() {
         </div>
         <div className="stat-card" style={styles.statCard}>
           <div className="stat-label">PENDING ANALYSIS</div>
-          <div className="stat-value" style={{ color: '#ffaa00' }}>{stats.pending_analysis}</div>
+          <div className="stat-value" style={{ color: 'var(--amber)' }}>{stats.pending_analysis}</div>
           <div className="stat-subtitle">Awaiting forensic queue</div>
         </div>
         <div className="stat-card" style={styles.statCard}>
           <div className="stat-label">COURT ADMISSIBLE</div>
-          <div className="stat-value" style={{ color: '#00ff88' }}>{stats.court_admissible}</div>
+          <div className="stat-value" style={{ color: 'var(--green)' }}>{stats.court_admissible}</div>
           <div className="stat-subtitle">Admissible in trial benched</div>
         </div>
         <div className="stat-card" style={styles.statCard}>
           <div className="stat-label">INTEGRITY COMPROMISED</div>
-          <div className="stat-value" style={{ color: stats.compromised > 0 ? '#ff2d55' : '#8a9ba8' }}>
+          <div className="stat-value" style={{ color: stats.compromised > 0 ? 'var(--red)' : '#8a9ba8' }}>
             {stats.compromised}
           </div>
           <div className="stat-subtitle">Alert: Seal breaches</div>
@@ -323,12 +323,12 @@ function EvidenceLocker() {
               <tbody>
                 {evidenceList.map(e => (
                   <tr key={e.EvidenceID}>
-                    <td className="mono" style={{ color: '#00e5ff', fontWeight: 'bold' }}>{e.EvidenceID}</td>
+                    <td className="mono" style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>{e.EvidenceID}</td>
                     <td className="mono">{e.CaseID}</td>
                     <td>{e.EvidenceType}</td>
                     <td className="mono">{e.CollectionDate}</td>
                     <td>
-                      <span className="badge" style={{ backgroundColor: 'rgba(0,229,255,0.05)', color: '#00e5ff' }}>
+                      <span className="badge" style={{ backgroundColor: 'rgba(0,229,255,0.05)', color: 'var(--cyan)' }}>
                         {e.AnalysisStatus}
                       </span>
                     </td>
@@ -341,7 +341,7 @@ function EvidenceLocker() {
                       </span>
                     </td>
                     <td>
-                      <span style={{ color: e.CourtAdmissible ? '#00ff88' : '#ff2d55', fontWeight: 'bold' }}>
+                      <span style={{ color: e.CourtAdmissible ? 'var(--green)' : 'var(--red)', fontWeight: 'bold' }}>
                         {e.CourtAdmissible ? "YES" : "NO"}
                       </span>
                     </td>
@@ -394,8 +394,8 @@ function EvidenceLocker() {
       {selectedItem && (
         <div style={styles.modalOverlay}>
           <div className="chart-card" style={styles.modalContainer}>
-            <div className="chart-header" style={{ borderBottom: '1px solid #1e2d3d', paddingBottom: '10px' }}>
-              <span className="chart-title" style={{ color: '#00e5ff' }}>CHAIN OF CUSTODY — {selectedItem.EvidenceID}</span>
+            <div className="chart-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+              <span className="chart-title" style={{ color: 'var(--cyan)' }}>CHAIN OF CUSTODY — {selectedItem.EvidenceID}</span>
               <button className="cyber-btn-outline" onClick={() => { setSelectedItem(null); setShowTransferForm(false); }} style={{ padding: '3px 8px', fontSize: '9px' }}>
                 CLOSE
               </button>
@@ -407,7 +407,7 @@ function EvidenceLocker() {
                 <div style={styles.modalLeftCol}>
                   <div style={styles.infoGroup}>
                     <span style={styles.infoLabel}>EVIDENCE ID</span>
-                    <span style={styles.infoValue} className="mono" style={{ color: '#00e5ff' }}>{selectedItem.EvidenceID}</span>
+                    <span style={styles.infoValue} className="mono" style={{ color: 'var(--cyan)' }}>{selectedItem.EvidenceID}</span>
                   </div>
 
                   <div style={styles.infoGroup}>
@@ -422,7 +422,7 @@ function EvidenceLocker() {
 
                   <div style={styles.infoGroup}>
                     <span style={styles.infoLabel}>ANALYSIS STATUS</span>
-                    <span className="badge" style={{ backgroundColor: 'rgba(0, 229, 255, 0.05)', color: '#00e5ff', width: 'fit-content', marginTop: '4px' }}>
+                    <span className="badge" style={{ backgroundColor: 'rgba(0, 229, 255, 0.05)', color: 'var(--cyan)', width: 'fit-content', marginTop: '4px' }}>
                       {selectedItem.AnalysisStatus}
                     </span>
                   </div>
@@ -433,7 +433,7 @@ function EvidenceLocker() {
                       style={{ 
                         fontSize: '18px', 
                         fontWeight: 'bold', 
-                        color: selectedItem.CourtAdmissible ? '#00ff88' : '#ff2d55',
+                        color: selectedItem.CourtAdmissible ? 'var(--green)' : 'var(--red)',
                         marginTop: '4px' 
                       }}
                     >
@@ -459,7 +459,7 @@ function EvidenceLocker() {
                     </div>
                     {selectedItem.IntegrityStatus === "Compromised" && (
                       <div style={styles.compromisedAlert}>
-                        <AlertTriangle size={14} color="#ff2d55" />
+                        <AlertTriangle size={14} color="var(--red)" />
                         <div style={{ fontSize: '9px', lineHeight: '1.3' }}>
                           <strong>⚠ INTEGRITY BREACH DETECTED</strong>
                           <br />This evidence may not be court admissible. Contact supervising officer immediately.
@@ -589,12 +589,12 @@ const styles = {
     gap: '20px',
   },
   statCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
   },
   filterCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '12px 20px',
   },
   filterForm: {
@@ -608,7 +608,7 @@ const styles = {
     gap: '8px',
     height: '36px',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '0 10px',
     borderRadius: '4px',
   },
@@ -628,7 +628,7 @@ const styles = {
   filterDropdown: {
     height: '34px',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     color: '#fff',
     fontSize: '11px',
     padding: '0 8px',
@@ -636,17 +636,17 @@ const styles = {
     minWidth: '120px',
   },
   tableCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
   },
   chartCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '20px',
   },
   chartTooltip: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     fontSize: '10px',
   },
   emptyState: {
@@ -667,9 +667,9 @@ const styles = {
   },
   modalContainer: {
     width: '640px',
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     padding: '20px',
   },
   modalBody: {
@@ -687,7 +687,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
-    borderRight: '1px solid #1e2d3d',
+    borderRight: '1px solid var(--border)',
     paddingRight: '16px',
   },
   modalRightCol: {
@@ -713,9 +713,9 @@ const styles = {
   },
   compromisedAlert: {
     marginTop: '12px',
-    background: 'rgba(255, 45, 85, 0.1)',
-    border: '1px solid #ff2d55',
-    color: '#ff2d55',
+    background: 'var(--red-bg)',
+    border: '1px solid var(--red)',
+    color: 'var(--red)',
     padding: '10px',
     display: 'flex',
     alignItems: 'center',
@@ -737,7 +737,7 @@ const styles = {
     top: '4px',
     bottom: '4px',
     width: '2px',
-    background: '#1e2d3d',
+    background: 'var(--border)',
   },
   timelineStep: {
     display: 'flex',
@@ -769,7 +769,7 @@ const styles = {
   },
   transferForm: {
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '12px',
     display: 'flex',
     flexDirection: 'column',
@@ -787,8 +787,8 @@ const styles = {
   loader: {
     width: '30px',
     height: '30px',
-    border: '2px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    border: '2px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     animation: 'spin 1s linear infinite',
   },
   errorContainer: {
@@ -806,9 +806,9 @@ const styles = {
     position: 'fixed',
     bottom: '24px',
     right: '24px',
-    backgroundColor: '#0d1117',
-    border: '1px solid #00ff88',
-    borderLeft: '4px solid #00ff88',
+    backgroundColor: 'var(--bg-panel)',
+    border: '1px solid var(--green)',
+    borderLeft: '4px solid var(--green)',
     color: '#ffffff',
     padding: '12px 20px',
     fontFamily: 'sans-serif',

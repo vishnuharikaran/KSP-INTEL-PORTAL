@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ChevronLeft, ChevronRight, Calendar, Check, Info, X 
+  ChevronLeft, ChevronRight, Calendar, Check, Info, X, AlertTriangle 
 } from 'lucide-react';
 
 const DISTRICTS = [
@@ -19,16 +19,18 @@ const CRIME_TYPES = [
 ];
 
 function CrimeCalendar({ onNavigateToCase }) {
-  const [currentMonth, setCurrentMonth] = useState(6); // June default
-  const [currentYear, setCurrentYear] = useState(2026);
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = 
+    useState(today.getMonth());
+  const [currentYear, setCurrentYear] = 
+    useState(today.getFullYear());
+  const [crimesData, setCrimesData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedDay, setSelectedDay] = useState(null);
+
   const [selectedDistrict, setSelectedDistrict] = useState("All Districts");
   const [selectedCrimeType, setSelectedCrimeType] = useState("All Crime Types");
-  
-  const [loading, setLoading] = useState(true);
   const [calendarData, setCalendarData] = useState(null);
-  const [error, setError] = useState("");
-
-  // Slide-in Day Detail Panel State
   const [selectedDayDetail, setSelectedDayDetail] = useState(null);
   const [successToast, setSuccessToast] = useState("");
 
@@ -37,33 +39,48 @@ function CrimeCalendar({ onNavigateToCase }) {
     "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
   ];
 
-  const fetchCalendarData = async (m, y, dist) => {
-    setLoading(true);
-    setError("");
-    try {
-      let url = `http://127.0.0.1:8000/api/calendar?month=${m}&year=${y}`;
-      if (dist && dist !== "All Districts") {
-        url += `&district=${encodeURIComponent(dist)}`;
-      }
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch calendar information.");
-      const json = await res.json();
-      setCalendarData(json);
-    } catch (err) {
-      setError(err.message || "Connection error.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchCalendarData(currentMonth, currentYear, selectedDistrict);
+    setIsLoading(true);
+    setSelectedDay(null);
+    
+    const host = window.location.port === '5173' ? 'http://127.0.0.1:8000' : '';
+    const url = `${host}/api/calendar?month=${currentMonth + 1}&year=${currentYear}` + 
+      (selectedDistrict && selectedDistrict !== "All Districts" ? `&district=${encodeURIComponent(selectedDistrict)}` : "");
+    
+    fetch(url)
+      .then(res => {
+        if (!res.ok) throw new Error('fetch failed');
+        return res.json();
+      })
+      .then(data => {
+        setCalendarData(data);
+        let fetched = Array.isArray(data) ? data : [];
+        if (data && !Array.isArray(data)) {
+          if (data.days) {
+            fetched = data.days.flatMap(d => (d.events || []).map(e => ({
+              ...e,
+              DateOfIncident: d.date,
+              date_of_incident: d.date,
+              CrimeType: e.crime_type,
+              crime_type: e.crime_type,
+              victim_district: e.victim_district
+            })));
+          }
+        }
+        setCrimesData(fetched);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setCrimesData([]);
+        setIsLoading(false);
+      });
   }, [currentMonth, currentYear, selectedDistrict]);
 
   const handlePrevMonth = () => {
+    setSelectedDay(null);
     setSelectedDayDetail(null);
-    if (currentMonth === 1) {
-      setCurrentMonth(12);
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
       setCurrentYear(y => y - 1);
     } else {
       setCurrentMonth(m => m - 1);
@@ -71,9 +88,10 @@ function CrimeCalendar({ onNavigateToCase }) {
   };
 
   const handleNextMonth = () => {
+    setSelectedDay(null);
     setSelectedDayDetail(null);
-    if (currentMonth === 12) {
-      setCurrentMonth(1);
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
       setCurrentYear(y => y + 1);
     } else {
       setCurrentMonth(m => m + 1);
@@ -85,108 +103,146 @@ function CrimeCalendar({ onNavigateToCase }) {
     setTimeout(() => setSuccessToast(""), 3000);
   };
 
-  const getPillColor = (type) => {
-    switch (type) {
-      case "UPI Fraud": return "#00e5ff"; // cyan
-      case "Phishing": return "#ff9500"; // orange
-      case "Sextortion": return "#ffaa00"; // amber
-      case "OLX Scam": return "#ff3b30"; // red
-      case "Romance Scam": return "#bf5af2"; // purple
-      case "Social Media Abuse": return "#34c759"; // green
-      default: return "#007aff"; // blue for Job Fraud
-    }
+  const getDayCrimes = (day) => {
+    if (!Array.isArray(crimesData)) return [];
+    return crimesData.filter(c => {
+      if (!c) return false;
+      const dateStr = c.DateOfIncident || c.date_of_incident;
+      if (!dateStr) return false;
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return false;
+        return (
+          d.getDate() === day &&
+          d.getMonth() === currentMonth &&
+          d.getFullYear() === currentYear
+        );
+      } catch {
+        return false;
+      }
+    });
   };
 
-  const getIntensityBackground = (count, isPrime) => {
-    if (isPrime) return 'rgba(255, 45, 85, 0.10)';
-    if (count === 0) return '#070a12';
-    if (count <= 2) return 'rgba(0, 229, 255, 0.04)';
-    if (count <= 4) return 'rgba(0, 229, 255, 0.08)';
-    return 'rgba(0, 229, 255, 0.15)';
+  const daysInMonth = new Date(
+    currentYear, currentMonth + 1, 0
+  ).getDate();
+
+  const firstDayOfMonth = new Date(
+    currentYear, currentMonth, 1
+  ).getDay();
+
+  const dailyAverage = daysInMonth > 0
+    ? crimesData.length / daysInMonth
+    : 0;
+
+  const isPrimeDate = (day) => {
+    if (dailyAverage === 0) return false;
+    return getDayCrimes(day).length > dailyAverage * 1.5;
   };
 
-  if (loading && !calendarData) {
+  const calendarDays = [
+    ...Array(firstDayOfMonth).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1)
+  ];
+
+  const getCrimeColor = (crimeType) => {
+    const colors = {
+      'Murder':          'rgba(255,45,85,0.7)',
+      'Robbery':         'rgba(255,107,53,0.7)',
+      'Theft':           'rgba(255,170,0,0.7)',
+      'Cybercrime':      'rgba(0,229,255,0.5)',
+      'Assault':         'rgba(191,90,242,0.7)',
+      'Fraud':           'rgba(0,122,255,0.7)',
+      'Kidnapping':      'rgba(255,45,85,0.5)',
+      'Drug Trafficking':'rgba(0,255,136,0.5)',
+      'Vehicle Theft':   'rgba(255,170,0,0.5)',
+      'Domestic Violence':'rgba(191,90,242,0.5)'
+    };
+    return colors[crimeType] || 'rgba(100,116,139,0.5)';
+  };
+
+  const getFilteredEvents = (dayEvents) => {
+    if (!dayEvents) return [];
+    if (selectedCrimeType === "All Crime Types") return dayEvents;
+    return dayEvents.filter(e => e.crime_type === selectedCrimeType || e.CrimeType === selectedCrimeType);
+  };
+
+  if (isLoading) {
     return (
-      <div style={styles.centeredState}>
-        <div style={styles.loader}></div>
-        <div style={{ color: '#00e5ff', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>
-          GENERATING CYBER CALENDAR MATRIX...
+      <div style={{ padding: '24px' }}>
+        <div style={{
+          height: '48px',
+          width: '300px',
+          background: 'linear-gradient(90deg, var(--bg-card) 25%, #1a2332 50%, var(--bg-card) 75%)',
+          backgroundSize: '400% 100%',
+          animation: 'shimmer 1.5s infinite',
+          borderRadius: '8px',
+          marginBottom: '24px'
+        }} />
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(7, 1fr)',
+          gap: '8px'
+        }}>
+          {Array(35).fill(null).map((_, i) => (
+            <div key={i} style={{
+              height: '100px',
+              background: 'linear-gradient(90deg, var(--bg-card) 25%, #1a2332 50%, var(--bg-card) 75%)',
+              backgroundSize: '400% 100%',
+              animation: 'shimmer 1.5s infinite',
+              borderRadius: '8px'
+            }} />
+          ))}
         </div>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div style={styles.errorContainer}>
-        <ShieldAlert size={16} />
-        <span>{error}</span>
-      </div>
-    );
-  }
-
-  const { days, summary, heatmap } = calendarData;
-
-  // Filter day events based on selected crime type
-  const getFilteredEvents = (dayEvents) => {
-    if (selectedCrimeType === "All Crime Types") return dayEvents;
-    return dayEvents.filter(e => e.crime_type === selectedCrimeType);
+  const summary = calendarData?.summary || {
+    total_this_month: crimesData.length,
+    most_common_crime: "Cybercrime"
   };
+  const heatmap = calendarData?.heatmap || [];
+  const maxHeatmapCount = heatmap.length > 0 ? Math.max(...heatmap.map(h => h.count || 0)) : 0;
 
-  // Get weekday layout offset
-  const firstDayStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
-  const firstDayDate = new Date(currentYear, currentMonth - 1, 1);
-  const startOffset = firstDayDate.getDay(); // 0: Sun, 6: Sat
-
-  // Generate calendar days including empty offset cells
-  const gridCells = [];
-  for (let i = 0; i < startOffset; i++) {
-    gridCells.push({ offset: true, key: `offset-${i}` });
-  }
-  
-  days.forEach(d => {
-    gridCells.push({ ...d, offset: false, key: d.date });
-  });
-
-  const maxHeatmapCount = Math.max(...heatmap.map(h => h.count));
-
-  // --- PRIME DATES COMPUTATION ---
-  const totalCountThisMonth = summary.total_this_month;
-  const numDaysInMonth = days.length;
-  const dailyAverage = numDaysInMonth > 0 ? (totalCountThisMonth / numDaysInMonth) : 0;
-  const primeThreshold = dailyAverage * 1.5;
-
-  const primeDatesList = days
-    .filter(d => d.count > primeThreshold && d.count > 0)
-    .map(d => {
-      // Find top crime of the day
+  const primeDatesList = Array.from({ length: daysInMonth }, (_, i) => i + 1)
+    .filter(day => isPrimeDate(day))
+    .map(day => {
+      const dayCrimes = getDayCrimes(day);
       const crimeCounts = {};
-      d.events.forEach(e => {
-        crimeCounts[e.crime_type] = (crimeCounts[e.crime_type] || 0) + 1;
+      dayCrimes.forEach(e => {
+        const ct = e.CrimeType || e.crime_type || "Unknown";
+        crimeCounts[ct] = (crimeCounts[ct] || 0) + 1;
       });
       const topCrime = Object.keys(crimeCounts).sort((a,b) => crimeCounts[b] - crimeCounts[a])[0] || summary.most_common_crime;
-      const vsAvg = dailyAverage > 0 ? Math.round(((d.count - dailyAverage) / dailyAverage) * 100) : 0;
+      const vsAvg = dailyAverage > 0 ? Math.round(((dayCrimes.length - dailyAverage) / dailyAverage) * 100) : 0;
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
       return {
-        date: d.date,
-        count: d.count,
+        date: dateStr,
+        count: dayCrimes.length,
         topCrime,
         vsAvg
       };
     });
 
-  // Pattern analysis text variables
   const weekdayCounts = { "Sunday": 0, "Monday": 0, "Tuesday": 0, "Wednesday": 0, "Thursday": 0, "Friday": 0, "Saturday": 0 };
   const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  
-  days.forEach(d => {
-    const dt = new Date(d.date);
-    const dayName = weekdayNames[dt.getDay()];
-    weekdayCounts[dayName] = (weekdayCounts[dayName] || 0) + d.count;
+  crimesData.forEach(c => {
+    const dateStr = c.DateOfIncident || c.date_of_incident;
+    if (dateStr) {
+      try {
+        const dt = new Date(dateStr);
+        if (!isNaN(dt.getTime())) {
+          const dayName = weekdayNames[dt.getDay()];
+          weekdayCounts[dayName] = (weekdayCounts[dayName] || 0) + 1;
+        }
+      } catch {}
+    }
   });
 
   const peakWeekday = Object.keys(weekdayCounts).sort((a,b) => weekdayCounts[b] - weekdayCounts[a])[0] || "Wednesday";
-  const nextMonthName = monthNames[currentMonth % 12];
+  const nextMonthName = monthNames[(currentMonth + 1) % 12];
   const activeDistrictName = selectedDistrict === "All Districts" ? "Karnataka overall limits" : selectedDistrict;
 
   return (
@@ -207,7 +263,7 @@ function CrimeCalendar({ onNavigateToCase }) {
             <span>PREV MONTH</span>
           </button>
           <span style={styles.monthLabel}>
-            {monthNames[currentMonth - 1]} {currentYear}
+            {monthNames[currentMonth]} {currentYear}
           </span>
           <button className="cyber-btn-outline" onClick={handleNextMonth} style={styles.navBtn}>
             <span>NEXT MONTH</span>
@@ -247,57 +303,120 @@ function CrimeCalendar({ onNavigateToCase }) {
             ))}
           </div>
 
-          <div style={styles.grid}>
-            {gridCells.map((cell) => {
-              if (cell.offset) {
-                return <div key={cell.key} style={styles.offsetCell} />;
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            gap: '6px'
+          }}>
+            {calendarDays.map((day, index) => {
+              if (day === null) {
+                return (
+                  <div
+                    key={`empty-${index}`}
+                    style={{ 
+                      minHeight: '90px',
+                      background: 'transparent'
+                    }}
+                  />
+                );
               }
 
-              const filteredEvents = getFilteredEvents(cell.events);
-              const totalCount = filteredEvents.length;
-              const isPrime = cell.count > primeThreshold && cell.count > 0;
-              const cellBg = getIntensityBackground(totalCount, isPrime);
+              const dayCrimes = getDayCrimes(day);
+              const isPrime = isPrimeDate(day);
+              const isToday =
+                day === today.getDate() &&
+                currentMonth === today.getMonth() &&
+                currentYear === today.getFullYear();
 
               return (
-                <div 
-                  key={cell.key}
-                  onClick={() => setSelectedDayDetail(cell)}
-                  style={{ 
-                    ...styles.dayCell, 
-                    backgroundColor: cellBg,
-                    border: selectedDayDetail?.date === cell.date ? '1px solid #00e5ff' : '1px solid #1e2d3d',
+                <div
+                  key={`day-${day}`}
+                  onClick={() => {
+                    setSelectedDay(day);
+                    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    setSelectedDayDetail({
+                      date: dateStr,
+                      events: dayCrimes.map(c => ({
+                        id: c.id || c.MissingID || c.VictimID || c.CaseID || 'N/A',
+                        crime_type: c.CrimeType || c.crime_type || 'Unknown',
+                        victim_district: c.victim_district || c.District || 'Unknown',
+                        status: c.status || c.Status || 'Active'
+                      }))
+                    });
+                  }}
+                  style={{
+                    minHeight: '90px',
+                    background: isPrime
+                      ? 'rgba(255,45,85,0.08)'
+                      : 'var(--bg-card)',
+                    border: isToday
+                      ? '1px solid rgba(0,229,255,0.4)'
+                      : isPrime
+                      ? '1px solid rgba(255,45,85,0.25)'
+                      : '1px solid var(--border)',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
                     position: 'relative'
                   }}
                 >
-                  {/* Prime Date Red Dot Marker */}
-                  {isPrime && (
-                    <div style={{ position: 'absolute', top: '4px', right: '4px', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#ff2d55' }} />
-                  )}
-
-                  <div style={{ 
-                    ...styles.dayNumber,
-                    color: isPrime ? '#ff2d55' : '#8a9ba8' 
+                  <div style={{
+                    fontSize: '13px',
+                    fontFamily: 'JetBrains Mono',
+                    fontWeight: '600',
+                    color: isToday
+                      ? 'var(--cyan)'
+                      : isPrime
+                      ? 'var(--red)'
+                      : 'rgba(255,255,255,0.8)',
+                    marginBottom: '6px'
                   }}>
-                    {cell.day_number}
-                  </div>
-                  
-                  <div style={styles.pillContainer}>
-                    {filteredEvents.slice(0, 3).map((e, idx) => (
-                      <div 
-                        key={idx} 
-                        style={{ 
-                          ...styles.eventPill, 
-                          borderLeft: `3px solid ${getPillColor(e.crime_type)}`,
-                          backgroundColor: `${getPillColor(e.crime_type)}10` 
-                        }}
-                      >
-                        {e.crime_type}
-                      </div>
-                    ))}
-                    {totalCount > 3 && (
-                      <div style={styles.moreLabel}>+{totalCount - 3} more</div>
+                    {day}
+                    {isPrime && (
+                      <span style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: 'var(--red)',
+                        display: 'block'
+                      }} />
                     )}
                   </div>
+
+                  {dayCrimes.slice(0, 3).map((crime, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        fontSize: '10px',
+                        padding: '2px 6px',
+                        borderRadius: '3px',
+                        marginBottom: '2px',
+                        background: getCrimeColor(
+                          crime?.CrimeType || crime?.crime_type
+                        ),
+                        color: 'white',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      {crime?.CrimeType || crime?.crime_type || 'Unknown'}
+                    </div>
+                  ))}
+
+                  {dayCrimes.length > 3 && (
+                    <div style={{
+                      fontSize: '10px',
+                      color: 'var(--text-label)',
+                      marginTop: '2px'
+                    }}>
+                      +{dayCrimes.length - 3} more
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -319,8 +438,8 @@ function CrimeCalendar({ onNavigateToCase }) {
                 getFilteredEvents(selectedDayDetail.events).map((e, idx) => (
                   <div key={idx} style={styles.incidentRow}>
                     <div style={styles.incidentRowHeader}>
-                      <span className="mono" style={{ color: '#00e5ff', fontWeight: 'bold' }}>{e.id}</span>
-                      <span className="badge" style={{ backgroundColor: 'rgba(0, 229, 255, 0.05)', color: '#00e5ff' }}>{e.status}</span>
+                      <span className="mono" style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>{e.id}</span>
+                      <span className="badge" style={{ backgroundColor: 'rgba(0, 229, 255, 0.05)', color: 'var(--cyan)' }}>{e.status}</span>
                     </div>
                     <div style={{ fontSize: '11px', color: '#fff', marginTop: '4px' }}>
                       <strong>Crime:</strong> {e.crime_type}
@@ -357,20 +476,20 @@ function CrimeCalendar({ onNavigateToCase }) {
         </div>
         <div className="stat-card" style={styles.statCard}>
           <div className="stat-label">DAILY AVERAGE</div>
-          <div className="stat-value" style={{ color: '#00e5ff' }}>{dailyAverage.toFixed(1)}</div>
+          <div className="stat-value" style={{ color: 'var(--cyan)' }}>{dailyAverage.toFixed(1)}</div>
           <div className="stat-subtitle">Crimes logged per 24h</div>
         </div>
         <div className="stat-card" style={styles.statCard}>
           <div className="stat-label">MOST COMMON SCAM</div>
-          <div className="stat-value" style={{ color: '#ffaa00' }}>{summary.most_common_crime}</div>
+          <div className="stat-value" style={{ color: 'var(--amber)' }}>{summary.most_common_crime}</div>
           <div className="stat-subtitle">Highest volume category</div>
         </div>
       </div>
 
       {/* PRIME DATES PANEL */}
       <div className="chart-card" style={styles.primeCard}>
-        <div className="chart-header" style={{ borderBottom: '1px solid #1e2d3d', paddingBottom: '10px' }}>
-          <span className="chart-title" style={{ color: '#ff2d55' }}>HIGH-RISK DATES — {monthNames[currentMonth - 1]} {currentYear}</span>
+        <div className="chart-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+          <span className="chart-title" style={{ color: 'var(--red)' }}>HIGH-RISK DATES — {monthNames[currentMonth]} {currentYear}</span>
         </div>
         
         {primeDatesList.length === 0 ? (
@@ -379,12 +498,12 @@ function CrimeCalendar({ onNavigateToCase }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
             {primeDatesList.map(row => (
               <div key={row.date} style={styles.primeRow}>
-                <span className="mono" style={{ fontWeight: 'bold', color: '#ff2d55', minWidth: '100px' }}>{row.date}</span>
+                <span className="mono" style={{ fontWeight: 'bold', color: 'var(--red)', minWidth: '100px' }}>{row.date}</span>
                 <span style={{ color: '#ffffff', minWidth: '80px' }}>{row.count} Cases</span>
-                <span className="badge" style={{ backgroundColor: 'rgba(0, 229, 255, 0.05)', color: '#00e5ff', minWidth: '120px', textAlign: 'center' }}>
+                <span className="badge" style={{ backgroundColor: 'rgba(0, 229, 255, 0.05)', color: 'var(--cyan)', minWidth: '120px', textAlign: 'center' }}>
                   {row.topCrime}
                 </span>
-                <span style={{ color: '#ff2d55', fontWeight: 'bold', marginLeft: 'auto' }}>
+                <span style={{ color: 'var(--red)', fontWeight: 'bold', marginLeft: 'auto' }}>
                   vs Daily Avg: +{row.vsAvg}%
                 </span>
               </div>
@@ -393,7 +512,7 @@ function CrimeCalendar({ onNavigateToCase }) {
         )}
 
         <div style={styles.patternBox}>
-          <AlertTriangle size={14} color="#ff2d55" style={{ marginTop: '2px' }} />
+          <AlertTriangle size={14} color="var(--red)" style={{ marginTop: '2px' }} />
           <div style={{ fontSize: '11px', color: '#8a9ba8', lineHeight: '1.4' }}>
             <strong>PATTERN ANALYSIS:</strong> Crime peaks observed on <strong>{peakWeekday}</strong> in <strong>{activeDistrictName}</strong>. Historical pattern suggests <strong>{nextMonthName} 08th to 16th</strong> will be high risk.
           </div>
@@ -414,7 +533,7 @@ function CrimeCalendar({ onNavigateToCase }) {
                 <div 
                   style={{ 
                     ...styles.heatmapBlock, 
-                    backgroundColor: '#00e5ff',
+                    backgroundColor: 'var(--cyan)',
                     opacity: Math.max(0.1, opacity) 
                   }} 
                   title={`${h.month}: ${h.count} cases`}
@@ -437,8 +556,8 @@ const styles = {
     gap: '20px',
   },
   headerCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '12px 20px',
     display: 'flex',
     justifyContent: 'space-between',
@@ -472,7 +591,7 @@ const styles = {
   filterDropdown: {
     height: '32px',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     color: '#ffffff',
     fontSize: '11px',
     padding: '0 8px',
@@ -484,8 +603,8 @@ const styles = {
   },
   calendarContainer: {
     flexGrow: 1,
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '16px',
   },
   weekHeader: {
@@ -510,7 +629,7 @@ const styles = {
   offsetCell: {
     background: '#070a12',
     opacity: 0.25,
-    border: '1px dashed #1e2d3d',
+    border: '1px dashed var(--border)',
   },
   dayCell: {
     padding: '6px',
@@ -549,15 +668,15 @@ const styles = {
   },
   detailPanel: {
     width: '260px',
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     display: 'flex',
     flexDirection: 'column',
     flexShrink: 0,
   },
   panelHeader: {
     padding: '12px 16px',
-    borderBottom: '1px solid #1e2d3d',
+    borderBottom: '1px solid var(--border)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -565,7 +684,7 @@ const styles = {
   panelTitle: {
     fontFamily: 'monospace',
     fontSize: '11px',
-    color: '#00e5ff',
+    color: 'var(--cyan)',
     fontWeight: 'bold',
   },
   panelBody: {
@@ -585,7 +704,7 @@ const styles = {
   },
   incidentRow: {
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '10px',
   },
   incidentRowHeader: {
@@ -594,12 +713,12 @@ const styles = {
     alignItems: 'center',
   },
   statCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
   },
   heatmapCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
   },
   heatmapStrip: {
     display: 'flex',
@@ -623,8 +742,8 @@ const styles = {
     color: '#8a9ba8',
   },
   primeCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '20px',
   },
   primeRow: {
@@ -632,8 +751,8 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
-    borderLeft: '3px solid #ff2d55',
+    border: '1px solid var(--border)',
+    borderLeft: '3px solid var(--red)',
     padding: '10px 14px',
     fontSize: '11px',
     fontFamily: 'monospace',
@@ -643,7 +762,7 @@ const styles = {
     alignItems: 'flex-start',
     gap: '10px',
     background: 'rgba(255, 45, 85, 0.05)',
-    border: '1px dashed rgba(255, 45, 85, 0.3)',
+    border: '1px dashed var(--red-border)',
     padding: '12px',
     marginTop: '16px',
   },
@@ -658,8 +777,8 @@ const styles = {
   loader: {
     width: '30px',
     height: '30px',
-    border: '2px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    border: '2px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     animation: 'spin 1s linear infinite',
   },
   errorContainer: {
@@ -677,9 +796,9 @@ const styles = {
     position: 'fixed',
     bottom: '24px',
     right: '24px',
-    backgroundColor: '#0d1117',
-    border: '1px solid #00ff88',
-    borderLeft: '4px solid #00ff88',
+    backgroundColor: 'var(--bg-panel)',
+    border: '1px solid var(--green)',
+    borderLeft: '4px solid var(--green)',
     color: '#ffffff',
     padding: '12px 20px',
     fontFamily: 'sans-serif',

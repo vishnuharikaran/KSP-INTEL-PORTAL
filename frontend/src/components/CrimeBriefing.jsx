@@ -105,7 +105,103 @@ function CrimeBriefing() {
   }, []);
 
   const handleExport = () => {
-    window.print();
+    const districtRows = districtsBoard.map(d => `
+      <tr>
+        <td>${d.district}</td>
+        <td style="text-align:center">${d.cases24h}</td>
+        <td style="text-align:center;font-weight:bold">${d.status}</td>
+        <td style="text-align:center">${d.vsYesterday}</td>
+      </tr>`).join('');
+
+    const incidentRows = topIncidents.map((inc, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${inc.complaint_id || ''}</td>
+        <td>${inc.crime_type || ''}</td>
+        <td>${inc.district || ''}</td>
+        <td style="text-align:right">₹${Number(inc.loss_amount_inr || 0).toLocaleString()}</td>
+        <td style="text-align:center">${(inc.status || '').toUpperCase()}</td>
+      </tr>`).join('');
+
+    const alertRows = activeAlerts.map(a => `
+      <tr>
+        <td style="font-weight:bold">${a.crime_type || a.name || ''}</td>
+        <td style="text-align:center">${a.count ?? a.cases ?? ''}</td>
+        <td>${a.trend || a.direction || ''}</td>
+      </tr>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<title>Crime Briefing Report — ${todayDate}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; font-size: 11pt; color: #000; background: #fff; padding: 30px 40px; }
+  h1 { font-size: 17pt; text-align: center; letter-spacing: 3px; }
+  h2 { font-size: 13pt; text-align: center; margin-top: 4px; }
+  h3 { font-size: 11pt; margin: 20px 0 8px 0; border-bottom: 1px solid #000; padding-bottom: 4px; }
+  .header { border-bottom: 3px double #000; padding-bottom: 14px; margin-bottom: 20px; text-align: center; }
+  .header p { font-size: 9pt; color: #444; margin-top: 5px; }
+  .meta { display: flex; justify-content: space-between; font-size: 10pt; background: #f2f2f2; border: 1px solid #bbb; padding: 8px 14px; margin-bottom: 16px; }
+  .stats-row { display: flex; gap: 16px; margin-bottom: 16px; }
+  .stat-box { flex: 1; border: 1px solid #bbb; padding: 10px; text-align: center; }
+  .stat-box .label { font-size: 8pt; color: #555; text-transform: uppercase; }
+  .stat-box .value { font-size: 16pt; font-weight: bold; margin: 4px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 16px; }
+  th { text-align: left; padding: 6px; font-weight: bold; background: #f0f0f0; border-bottom: 2px solid #000; }
+  td { padding: 6px; border-bottom: 1px solid #ddd; }
+  .footer { text-align: center; margin-top: 30px; font-size: 9pt; color: #666; border-top: 1px solid #ccc; padding-top: 12px; }
+  .sig { margin-top: 50px; display: flex; justify-content: space-between; font-size: 9pt; border-top: 1px solid #000; padding-top: 10px; }
+  @media print { body { padding: 10px 18px; } }
+</style>
+</head><body>
+  <div class="header">
+    <h1>KARNATAKA STATE POLICE</h1>
+    <h2>DAILY CRIME INTELLIGENCE BRIEFING</h2>
+    <p>Cyber Crime Wing | Command Intelligence Division</p>
+  </div>
+  <div class="meta">
+    <span><strong>Date:</strong> ${todayDate}</span>
+    <span><strong>Time:</strong> ${currentTime} IST</span>
+    <span><strong>Generated:</strong> ${new Date().toLocaleString()}</span>
+  </div>
+
+  <h3>SITUATIONAL OVERVIEW</h3>
+  <div class="stats-row">
+    <div class="stat-box"><div class="label">Incidents (24H)</div><div class="value">${stats.incidents24h}</div></div>
+    <div class="stat-box"><div class="label">Highest Activity</div><div class="value" style="font-size:12pt">${stats.highestActivity}</div></div>
+    <div class="stat-box"><div class="label">Active Alerts</div><div class="value">${stats.activeAlerts}</div></div>
+  </div>
+
+  <h3>DISTRICT STATUS BOARD (31 DISTRICTS)</h3>
+  <table>
+    <thead><tr><th>DISTRICT</th><th style="text-align:center">24H CASES</th><th style="text-align:center">STATUS</th><th style="text-align:center">VS YESTERDAY</th></tr></thead>
+    <tbody>${districtRows || '<tr><td colspan="4">No data</td></tr>'}</tbody>
+  </table>
+
+  <h3>TOP 5 HIGH-VALUE INCIDENTS</h3>
+  <table>
+    <thead><tr><th>#</th><th>COMPLAINT ID</th><th>CRIME TYPE</th><th>DISTRICT</th><th style="text-align:right">LOSS (₹)</th><th style="text-align:center">STATUS</th></tr></thead>
+    <tbody>${incidentRows || '<tr><td colspan="6">No data</td></tr>'}</tbody>
+  </table>
+
+  <h3>ACTIVE INTELLIGENCE ALERTS</h3>
+  <table>
+    <thead><tr><th>CRIME TYPE</th><th style="text-align:center">COUNT</th><th>TREND</th></tr></thead>
+    <tbody>${alertRows || '<tr><td colspan="3">No alerts</td></tr>'}</tbody>
+  </table>
+
+  <div class="sig">
+    <div><div>REPORT COMPILED BY: KSP INTELLIGENCE PORTAL</div><div>SUPERINTENDENT OF POLICE, CYBER DIVISION</div></div>
+    <div style="text-align:right"><div>SIGNATURE & OFFICIAL STAMP</div><div style="margin-top:25px;border-bottom:1px dashed #000;width:180px;float:right"></div></div>
+  </div>
+  <div class="footer">Karnataka State Police | Cyber Crime Wing | Auto-Generated via KSP Intelligence Portal</div>
+  <script>window.onload = function() { window.print(); }<\/script>
+</body></html>`;
+
+    const win = window.open('', '_blank', 'width=820,height=950');
+    if (!win) { alert('Pop-up blocked. Please allow pop-ups for this site.'); return; }
+    win.document.write(html);
+    win.document.close();
   };
 
   const toggleIncident = (id) => {
@@ -118,54 +214,6 @@ function CrimeBriefing() {
 
   return (
     <div style={styles.container}>
-      {/* Printable styling override injection */}
-      <style>{`
-        @media print {
-          .sidebar, .top-bar, .notification-banner, .breadcrumb, .export-btn-container {
-            display: none !important;
-          }
-          .main-content {
-            margin-left: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-            height: auto !important;
-            overflow: visible !important;
-          }
-          .viewport {
-            padding: 0 !important;
-          }
-          body {
-            background-color: #ffffff !important;
-            color: #000000 !important;
-          }
-          .briefing-report {
-            background: #ffffff !important;
-            color: #000000 !important;
-            border: none !important;
-            padding: 0 !important;
-          }
-          .brief-hdr-text, .section-title, .incident-desc {
-            color: #000000 !important;
-          }
-          .stat-card, .cyber-table-container, .cyber-table, .cyber-table td, .cyber-table th {
-            background-color: #ffffff !important;
-            color: #000000 !important;
-            border-color: #cccccc !important;
-          }
-          .stat-value {
-            color: #000000 !important;
-          }
-          .elevated-row {
-            background-color: #f2f2f2 !important;
-            border-left-color: #000000 !important;
-          }
-          .alert-strip {
-            background-color: #f9f9f9 !important;
-            color: #000000 !important;
-            border-color: #666666 !important;
-          }
-        }
-      `}</style>
 
       {/* Export Action Button */}
       {!loading && !error && (
@@ -180,7 +228,7 @@ function CrimeBriefing() {
       {loading ? (
         <div style={styles.centeredState}>
           <div style={styles.loader}></div>
-          <div style={{ color: '#00e5ff', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>RETRIEVING LATEST BRIEFINGS...</div>
+          <div style={{ color: 'var(--cyan)', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>RETRIEVING LATEST BRIEFINGS...</div>
         </div>
       ) : error ? (
         <div style={styles.errorContainer}>
@@ -273,7 +321,7 @@ function CrimeBriefing() {
                   <div key={incident.id} style={styles.incidentRow}>
                     <div style={styles.incidentHeader} onClick={() => toggleIncident(incident.id)}>
                       <div style={styles.incidentHdrLeft}>
-                        <span className="mono" style={{ color: '#00e5ff', fontWeight: 'bold' }}>{incident.id}</span>
+                        <span className="mono" style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>{incident.id}</span>
                         <span className="brief-hdr-text" style={{ color: '#ffffff' }}>{incident.crime_type} in {incident.victim_district}</span>
                       </div>
                       <div style={styles.incidentHdrRight}>
@@ -362,15 +410,15 @@ const styles = {
     justifyContent: 'flex-end',
   },
   briefingPaper: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '30px',
     display: 'flex',
     flexDirection: 'column',
     gap: '24px',
   },
   headerBlock: {
-    borderBottom: '1px solid #1e2d3d',
+    borderBottom: '1px solid var(--border)',
     paddingBottom: '16px',
     display: 'flex',
     flexDirection: 'column',
@@ -382,7 +430,7 @@ const styles = {
     fontWeight: 'bold',
     color: '#ffffff',
     letterSpacing: '2px',
-    borderTop: '3px solid #00e5ff',
+    borderTop: '3px solid var(--cyan)',
     paddingTop: '10px',
   },
   subHeader: {
@@ -406,18 +454,18 @@ const styles = {
   sectionTitle: {
     fontFamily: 'monospace',
     fontSize: '12px',
-    color: '#00e5ff',
+    color: 'var(--cyan)',
     letterSpacing: '1px',
-    borderBottom: '1px solid #1e2d3d',
+    borderBottom: '1px solid var(--border)',
     paddingBottom: '6px',
   },
   statCard: {
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
   },
   elevatedRow: {
     backgroundColor: 'rgba(255, 45, 85, 0.06)',
-    borderLeft: '3px solid #ff2d55',
+    borderLeft: '3px solid var(--red)',
   },
   expandableList: {
     display: 'flex',
@@ -425,7 +473,7 @@ const styles = {
     gap: '8px',
   },
   incidentRow: {
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     background: '#070a12',
   },
   incidentHeader: {
@@ -447,8 +495,8 @@ const styles = {
   },
   incidentDetails: {
     padding: '16px',
-    borderTop: '1px solid #1e2d3d',
-    background: '#0d1117',
+    borderTop: '1px solid var(--border)',
+    background: 'var(--bg-panel)',
   },
   detailsGrid: {
     display: 'grid',
@@ -502,8 +550,8 @@ const styles = {
   loader: {
     width: '30px',
     height: '30px',
-    border: '2px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    border: '2px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     animation: 'spin 1s linear infinite',
   },
   errorContainer: {

@@ -145,18 +145,32 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
   }
 
   const anomaliesPlot = anomalies.map(a => {
-    const hr = parseInt(a.time_of_day.split(':')[0]);
+    const hr = parseInt((a.time_of_day || '12:00').split(':')[0]);
+    const age = a.offender_age || 30;
+    const loss = a.loss_amount || a.loss_amount_inr || 0;
+
+    // Use API alert_level if present, otherwise compute from data
+    let level = a.alert_level;
+    if (!level || !['CRITICAL', 'HIGH', 'MEDIUM'].includes(level)) {
+      if (loss > 200000 || (hr >= 22 && age <= 25)) {
+        level = 'CRITICAL';
+      } else if (loss > 80000 || hr >= 20 || age <= 22) {
+        level = 'HIGH';
+      } else {
+        level = 'MEDIUM';
+      }
+    }
+
     let size = 45;
-    if (a.alert_level === 'CRITICAL') size = 120;
-    else if (a.alert_level === 'HIGH') size = 80;
-    else if (a.alert_level === 'MEDIUM') size = 45;
+    if (level === 'CRITICAL') size = 120;
+    else if (level === 'HIGH') size = 80;
 
     return {
       x: hr,
-      y: a.offender_age,
+      y: age,
       z: size,
       label: a.case_id,
-      level: a.alert_level
+      level
     };
   });
 
@@ -164,12 +178,12 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '15px' }}>
       {/* SUCCESS NOTIFICATION BANNERS */}
       {flaggedBanner && (
-        <div style={{ padding: '12px 20px', background: 'rgba(255, 170, 0, 0.15)', border: '1px solid #ffaa00', color: '#ffaa00', fontSize: '11px', fontFamily: 'monospace' }}>
+        <div style={{ padding: '12px 20px', background: 'var(--amber-bg)', border: '1px solid var(--amber)', color: 'var(--amber)', fontSize: '11px', fontFamily: 'monospace' }}>
           ⚠️ {flaggedBanner}
         </div>
       )}
       {escalatedBanner && (
-        <div style={{ padding: '12px 20px', background: 'rgba(255, 45, 85, 0.15)', border: '1px solid #ff2d55', color: '#ff2d55', fontSize: '11px', fontFamily: 'monospace' }}>
+        <div style={{ padding: '12px 20px', background: 'var(--red-bg)', border: '1px solid var(--red)', color: 'var(--red)', fontSize: '11px', fontFamily: 'monospace' }}>
           🚨 {escalatedBanner}
         </div>
       )}
@@ -190,7 +204,7 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
           <div className="chart-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <div className="chart-header">
               <span className="chart-title">ISOLATION FOREST ANOMALY FEED</span>
-              <span style={{ fontSize: '10px', color: '#ff2d55', fontFamily: 'monospace' }}>
+              <span style={{ fontSize: '10px', color: 'var(--red)', fontFamily: 'monospace' }}>
                 ● OUTLIER FILTER
               </span>
             </div>
@@ -212,7 +226,7 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
 
                     {/* Center Details */}
                     <div style={styles.feedDetails}>
-                      <div className="mono" style={{ color: '#00e5ff', fontWeight: 'bold' }}>{a.case_id}</div>
+                      <div className="mono" style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>{a.case_id}</div>
                       <div style={styles.feedSummary}>
                         {a.crime_type} | {a.district} | {a.time_of_day}
                       </div>
@@ -253,7 +267,7 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
                     name="Time of Day" 
                     unit="h" 
                     domain={[0, 24]} 
-                    stroke="#00e5ff"
+                    stroke="var(--cyan)"
                     style={{ fontFamily: 'monospace', fontSize: '10px' }}
                   />
                   <YAxis 
@@ -262,7 +276,7 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
                     name="Offender Age" 
                     unit="y" 
                     domain={[15, 70]} 
-                    stroke="#00e5ff"
+                    stroke="var(--cyan)"
                     style={{ fontFamily: 'monospace', fontSize: '10px' }}
                   />
                   <ZAxis 
@@ -306,7 +320,7 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
                   />
 
                   {/* Guidelines */}
-                  <ReferenceLine x={22} stroke="#ff2d55" strokeDasharray="3 3" label={{ value: "Night Hours", fill: "#ff2d55", fontSize: 9, position: 'top' }} />
+                  <ReferenceLine x={22} stroke="var(--red)" strokeDasharray="3 3" label={{ value: "Night Hours", fill: "var(--red)", fontSize: 9, position: 'top' }} />
                   <ReferenceLine y={25} stroke="#ff9500" strokeDasharray="3 3" label={{ value: "Youth Range", fill: "#ff9500", fontSize: 9, position: 'right' }} />
                   
                   <Legend style={{ fontSize: '10px', fontFamily: 'monospace' }} />
@@ -349,7 +363,7 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
               <div className="modal-content" style={{ position: 'relative', zIndex: 1 }}>
                 {/* Anomaly score gauge */}
                 <div className="gauge-container">
-                  <span className="stat-label" style={{ color: '#ff2d55', fontWeight: 'bold' }}>
+                  <span className="stat-label" style={{ color: 'var(--red)', fontWeight: 'bold' }}>
                     ANOMALY INTENSITY SCORE: {selectedCase.anomaly_score}
                   </span>
                   <div className="gauge-track">
@@ -369,12 +383,12 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
 
                 {/* AI Explanation Box */}
                 <div className="ai-explanation-box">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#00e5ff', marginBottom: '8px', fontWeight: 'bold', fontSize: '11px', fontFamily: 'monospace' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--cyan)', marginBottom: '8px', fontWeight: 'bold', fontSize: '11px', fontFamily: 'monospace' }}>
                     <AlertOctagon size={14} />
                     <span>NEURAL ALIGNMENT REASONING LOG</span>
                   </div>
                   This case deviates significantly from baseline behavioral models because: 
-                  <b style={{ color: '#00e5ff', marginLeft: '4px' }}>{selectedCase.reason}</b>.
+                  <b style={{ color: 'var(--cyan)', marginLeft: '4px' }}>{selectedCase.reason}</b>.
                 </div>
 
                 {/* Full details grid */}
@@ -415,7 +429,7 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
                       <tbody>
                         {similarCases.map((sc) => (
                           <tr key={sc.id}>
-                            <td style={{ color: '#00e5ff', fontWeight: 'bold' }}>{sc.id}</td>
+                            <td style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>{sc.id}</td>
                             <td>{sc.date_of_incident}</td>
                             <td className="mono">{sc.accused_phone}</td>
                             <td className="mono" style={{ textAlign: 'right' }}>₹{sc.loss_amount_inr.toLocaleString()}</td>
@@ -473,7 +487,7 @@ const styles = {
     width: '40px',
     height: '40px',
     border: '2px solid #1a2a3a',
-    borderTop: '2px solid #00e5ff',
+    borderTop: '2px solid var(--cyan)',
     marginBottom: '20px',
   },
   loadingText: {

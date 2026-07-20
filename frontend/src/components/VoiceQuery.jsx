@@ -248,7 +248,7 @@ function VoiceQuery() {
       <div className="chart-card" style={styles.micCard}>
         <div className="chart-header">
           <span className="chart-title">BILINGUAL VOICE INTEL CORE</span>
-          <span style={{ fontSize: '10px', color: isListening ? '#ff3b30' : '#00e5ff', fontFamily: 'monospace' }}>
+          <span style={{ fontSize: '10px', color: isListening ? '#ff3b30' : 'var(--cyan)', fontFamily: 'monospace' }}>
             {isListening ? '● CAPTURING WAVEFORMS...' : '● SPEECH NODE ONLINE'}
           </span>
         </div>
@@ -264,8 +264,8 @@ function VoiceQuery() {
               style={styles.switchInput}
             />
             <div style={styles.slider}>
-              <span style={{ ...styles.sliderText, color: language === 'en-IN' ? '#00e5ff' : '#4f616d' }}>ENGLISH (en-IN)</span>
-              <span style={{ ...styles.sliderText, color: language === 'kn-IN' ? '#00e5ff' : '#4f616d' }}>ಕನ್ನಡ (kn-IN)</span>
+              <span style={{ ...styles.sliderText, color: language === 'en-IN' ? 'var(--cyan)' : '#4f616d' }}>ENGLISH (en-IN)</span>
+              <span style={{ ...styles.sliderText, color: language === 'kn-IN' ? 'var(--cyan)' : '#4f616d' }}>ಕನ್ನಡ (kn-IN)</span>
             </div>
           </label>
         </div>
@@ -283,7 +283,7 @@ function VoiceQuery() {
             {isListening ? (
               <MicOff size={44} color="#ff3b30" />
             ) : (
-              <Mic size={44} color="#00e5ff" />
+              <Mic size={44} color="var(--cyan)" />
             )}
           </button>
           <div style={styles.micLabel}>Speak in English or Kannada</div>
@@ -325,7 +325,7 @@ function VoiceQuery() {
 
         {/* Help Suggestions */}
         <div style={styles.helpText}>
-          <span style={{ color: '#00e5ff', fontWeight: 'bold' }}>KANNADA COMMAND KEYWORDS:</span>
+          <span style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>KANNADA COMMAND KEYWORDS:</span>
           <span className="mono" style={{ marginLeft: '6px', color: '#8a9ba8' }}>
             ಬೆಂಗಳೂರು (Bengaluru Urban) • ವಂಚನೆ (Fraud cases) • ಸೈಬರ್ (Cyber) • ದೂರು (Complaints) • ಬಂಧನ (Arrested cases)
           </span>
@@ -343,7 +343,7 @@ function VoiceQuery() {
           </div>
           <div style={styles.statLine} style={{ borderLeft: '1px solid #1a2a3a', paddingLeft: '20px' }}>
             <span style={styles.statLabel}>RESULTS FOUND:</span>
-            <span style={{ ...styles.statVal, color: '#00e5ff' }} className="mono">
+            <span style={{ ...styles.statVal, color: 'var(--cyan)' }} className="mono">
               {results.length} records
             </span>
           </div>
@@ -353,7 +353,7 @@ function VoiceQuery() {
       {/* District specific Insight banner */}
       {districtInsight && (
         <div className="chart-card" style={styles.insightCard}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#00e5ff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--cyan)' }}>
             <Shield size={16} />
             <span style={{ fontWeight: 'bold', fontSize: '11px', fontFamily: 'monospace' }}>
               DISTRICT INTEGRATION INTELLIGENCE DOSSIER: {districtInsight.name.toUpperCase()}
@@ -408,7 +408,7 @@ function VoiceQuery() {
                 <tbody>
                   {results.map((rec) => (
                     <tr key={rec.id}>
-                      <td style={{ fontWeight: 'bold', color: '#00e5ff' }}>{rec.id}</td>
+                      <td style={{ fontWeight: 'bold', color: 'var(--cyan)' }}>{rec.id}</td>
                       <td>{rec.victim_district}</td>
                       <td>{rec.crime_type}</td>
                       <td className="mono">{rec.platform}</td>
@@ -551,7 +551,7 @@ const styles = {
   },
   insightCard: {
     backgroundColor: 'rgba(0, 229, 255, 0.02)',
-    borderColor: '#00e5ff',
+    borderColor: 'var(--cyan)',
     padding: '16px 24px',
   },
   insightMetrics: {
@@ -597,8 +597,8 @@ const styles = {
     fontSize: '11px',
     fontFamily: 'monospace',
     backgroundColor: 'transparent',
-    color: '#00e5ff',
-    border: '1px solid #00e5ff',
+    color: 'var(--cyan)',
+    border: '1px solid var(--cyan)',
     cursor: 'pointer',
   },
 };

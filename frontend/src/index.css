@@ -1,44 +1,70 @@
 /* KSP Cybercrime Intelligence Portal - Design System */
 
 :root {
-  /* Core backgrounds */
   --bg-primary:    #020409;
+  --bg-root:       #020409;
   --bg-secondary:  #080c14;
   --bg-panel:      #0d1117;
   --bg-card:       #111827;
   --bg-hover:      #161d2b;
+  --bg-input:      #0d1117;
 
-  /* Accent colors */
-  --cyan:          #00e5ff;
-  --cyan-dim:      rgba(0, 229, 255, 0.12);
-  --cyan-glow:     0 0 20px rgba(0, 229, 255, 0.2);
-  --red:           #ff2d55;
-  --red-dim:       rgba(255, 45, 85, 0.10);
-  --amber:         #ffaa00;
-  --amber-dim:     rgba(255, 170, 0, 0.10);
-  --green:         #00ff88;
-  --green-dim:     rgba(0, 255, 136, 0.10);
-  --purple:        #bf5af2;
-  --gold:          #FFD700;
+  --text-primary:  rgba(255, 255, 255, 0.92);
+  --text-secondary:rgba(255, 255, 255, 0.55);
+  --text-dim:      rgba(255, 255, 255, 0.28);
+  --text-label:    rgba(255, 255, 255, 0.38);
 
-  /* Borders */
   --border:        1px solid #1e2d3d;
+  --border-subtle: rgba(255, 255, 255, 0.06);
   --border-cyan:   1px solid rgba(0, 229, 255, 0.3);
   --border-red:    1px solid rgba(255, 45, 85, 0.3);
   --border-amber:  1px solid rgba(255, 170, 0, 0.3);
   --border-green:  1px solid rgba(0, 255, 136, 0.25);
   --border-gold:   1px solid rgba(255, 215, 0, 0.4);
 
-  /* Typography */
+  --cyan:          #00e5ff;
+  --cyan-dim:      rgba(0, 229, 255, 0.12);
+  --cyan-bg:       rgba(0, 229, 255, 0.10);
+  --cyan-border:   rgba(0, 229, 255, 0.30);
+  --cyan-glow:     0 0 24px rgba(0, 229, 255, 0.20),
+                   0 0 48px rgba(0, 229, 255, 0.08);
+  --accent:        var(--cyan);
+
+  --red:           #ff2d55;
+  --red-dim:       rgba(255, 45, 85, 0.10);
+  --red-bg:        rgba(255, 45, 85, 0.10);
+  --red-border:    rgba(255, 45, 85, 0.30);
+
+  --amber:         #ffaa00;
+  --amber-dim:     rgba(255, 170, 0, 0.10);
+  --amber-bg:      rgba(255, 170, 0, 0.10);
+  --amber-border:  rgba(255, 170, 0, 0.30);
+
+  --green:         #00ff88;
+  --green-dim:     rgba(0, 255, 136, 0.10);
+  --green-bg:      rgba(0, 255, 136, 0.10);
+  --green-border:  rgba(0, 255, 136, 0.25);
+
+  --purple:        #bf5af2;
+  --purple-bg:     rgba(191, 90, 242, 0.10);
+  --gold:          #FFD700;
+  --gold-bg:       rgba(255, 215, 0, 0.10);
+  --gold-border:   rgba(255, 215, 0, 0.35);
+
+  --shadow-card:   0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-modal:  0 24px 80px rgba(0, 0, 0, 0.7);
+  --shadow-glow:   0 0 0 3px rgba(0, 229, 255, 0.10);
+
+  --chart-grid:    #1e2d3d;
+  --chart-text:    rgba(255, 255, 255, 0.35);
+  --tooltip-bg:    #0d1117;
+  --tooltip-border:#00e5ff;
+
   --font-mono:     'JetBrains Mono', 'Courier New', monospace;
   --font-ui:       'Inter', 'Segoe UI', sans-serif;
-
-  /* Spacing */
   --radius-sm:     6px;
   --radius-md:     10px;
   --radius-lg:     14px;
-
-  /* Transitions */
   --transition:    all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -981,8 +1007,8 @@ body {
 /* Password Input Error Shake */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
 }
 
 .shake-input {
@@ -1007,7 +1033,7 @@ button:focus, input:focus, select:focus, textarea:focus, [tabindex]:focus {
 
 /* Shimmer Loading Skeletons */
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
+  0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
@@ -1017,3 +1043,4 @@ button:focus, input:focus, select:focus, textarea:focus, [tabindex]:focus {
   animation: shimmer 1.5s infinite;
   border-radius: var(--radius-sm);
 }
+

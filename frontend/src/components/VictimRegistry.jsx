@@ -118,17 +118,17 @@ function VictimRegistry({ onNavigateToCase }) {
 
   const getCompensationColor = (status) => {
     switch (status) {
-      case "Disbursed": return "#00ff88";
-      case "Approved": return "#00e5ff";
-      default: return "#ffaa00"; // Pending
+      case "Disbursed": return "var(--green)";
+      case "Approved": return "var(--cyan)";
+      default: return "var(--amber)"; // Pending
     }
   };
 
   const getInjuryColor = (severity) => {
     switch (severity) {
-      case "Critical": return "#ff2d55";
-      case "Major": return "#ffaa00";
-      case "Minor": return "#00ff88";
+      case "Critical": return "var(--red)";
+      case "Major": return "var(--amber)";
+      case "Minor": return "var(--green)";
       default: return "#8a9ba8";
     }
   };
@@ -137,7 +137,7 @@ function VictimRegistry({ onNavigateToCase }) {
     return (
       <div style={styles.centeredState}>
         <div style={styles.loader}></div>
-        <div style={{ color: '#00e5ff', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>
+        <div style={{ color: 'var(--cyan)', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>
           FETCHING INTELLIGENCE DATA...
         </div>
       </div>
@@ -172,7 +172,7 @@ function VictimRegistry({ onNavigateToCase }) {
         </div>
         <div className="stat-card" style={styles.statCard}>
           <div className="stat-label">CASES CLOSED</div>
-          <div className="stat-value" style={{ color: '#00ff88' }}>{stats.cases_closed}</div>
+          <div className="stat-value" style={{ color: 'var(--green)' }}>{stats.cases_closed}</div>
           <div className="stat-subtitle">Completed rehabilitations</div>
         </div>
       </div>
@@ -265,7 +265,7 @@ function VictimRegistry({ onNavigateToCase }) {
               <tbody>
                 {victims.map(v => (
                   <tr key={v.VictimID}>
-                    <td className="mono" style={{ color: '#00e5ff', fontWeight: 'bold' }}>{v.VictimID}</td>
+                    <td className="mono" style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>{v.VictimID}</td>
                     <td className="mono">{v.CaseID}</td>
                     <td>{v.CrimeType}</td>
                     <td>{v.District}</td>
@@ -316,9 +316,9 @@ function VictimRegistry({ onNavigateToCase }) {
               <YAxis stroke="#8a9ba8" tick={{ fontSize: 9 }} />
               <Tooltip contentStyle={styles.chartTooltip} />
               <Legend wrapperStyle={{ fontSize: 10 }} />
-              <Bar dataKey="Disbursed" stackId="a" fill="#00ff88" barSize={35} />
-              <Bar dataKey="Approved" stackId="a" fill="#00e5ff" />
-              <Bar dataKey="Pending" stackId="a" fill="#ffaa00" />
+              <Bar dataKey="Disbursed" stackId="a" fill="var(--green)" barSize={35} />
+              <Bar dataKey="Approved" stackId="a" fill="var(--cyan)" />
+              <Bar dataKey="Pending" stackId="a" fill="var(--amber)" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -328,8 +328,8 @@ function VictimRegistry({ onNavigateToCase }) {
       {selectedVictim && (
         <div style={styles.modalOverlay}>
           <div className="chart-card" style={styles.modalContainer}>
-            <div className="chart-header" style={{ borderBottom: '1px solid #1e2d3d', paddingBottom: '10px' }}>
-              <span className="chart-title" style={{ color: '#00e5ff' }}>VICTIM PROFILE — {selectedVictim.VictimID}</span>
+            <div className="chart-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+              <span className="chart-title" style={{ color: 'var(--cyan)' }}>VICTIM PROFILE — {selectedVictim.VictimID}</span>
               <button className="cyber-btn-outline" onClick={() => setSelectedVictim(null)} style={{ padding: '3px 8px', fontSize: '9px' }}>
                 CLOSE
               </button>
@@ -341,7 +341,7 @@ function VictimRegistry({ onNavigateToCase }) {
                 <div style={styles.modalLeftCol}>
                   <div style={styles.avatarRow}>
                     <div style={styles.avatarCircle}>
-                      <User size={30} color="#00e5ff" />
+                      <User size={30} color="var(--cyan)" />
                     </div>
                     <div>
                       <h4 style={{ margin: 0, color: '#fff', fontSize: '14px' }}>{selectedVictim.Name}</h4>
@@ -385,7 +385,7 @@ function VictimRegistry({ onNavigateToCase }) {
                           setSelectedVictim(null);
                         }
                       }}
-                      style={{ color: '#00e5ff', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}
+                      style={{ color: 'var(--cyan)', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}
                     >
                       {selectedVictim.CaseID}
                     </span>
@@ -412,7 +412,7 @@ function VictimRegistry({ onNavigateToCase }) {
                                   : [...selectedVictim.SupportServicesAssigned, srv];
                                 handleUpdateVictimProfile({ support_services: newServices });
                               }}
-                              style={{ marginRight: '6px', accentColor: '#00e5ff' }}
+                              style={{ marginRight: '6px', accentColor: 'var(--cyan)' }}
                             />
                             {srv}
                           </label>
@@ -426,7 +426,7 @@ function VictimRegistry({ onNavigateToCase }) {
                     <span style={styles.infoLabel}>COMPENSATION STATUS STEPPER</span>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px', paddingLeft: '8px', position: 'relative' }}>
                       {/* Vertical line connecting steps */}
-                      <div style={{ position: 'absolute', left: '6px', top: '10px', bottom: '10px', width: '2px', backgroundColor: '#1e2d3d', zIndex: 0 }} />
+                      <div style={{ position: 'absolute', left: '6px', top: '10px', bottom: '10px', width: '2px', backgroundColor: 'var(--border)', zIndex: 0 }} />
 
                       {[
                         { id: 1, label: "Application", key: "Application" },
@@ -449,9 +449,9 @@ function VictimRegistry({ onNavigateToCase }) {
                           else state = "future";
                         }
 
-                        let color = "rgba(255,255,255,0.3)";
+                        let color = "var(--text-dim)";
                         let dotBg = "#070a12";
-                        let dotBorder = "2px solid #1e2d3d";
+                        let dotBorder = "2px solid var(--border)";
                         let dotContent = null;
 
                         if (state === "done") {
@@ -493,7 +493,7 @@ function VictimRegistry({ onNavigateToCase }) {
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                               <span style={{ fontSize: '11px', fontWeight: 'bold', color, letterSpacing: '0.5px' }}>{step.label.toUpperCase()}</span>
-                              <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)' }}>
+                              <span style={{ fontSize: '9px', color: 'var(--text-label)' }}>
                                 {state === "done" ? "Completed" : state === "current" ? `In Progress (${compStatus})` : "Awaiting previous steps"}
                               </span>
                             </div>
@@ -536,12 +536,12 @@ const styles = {
     gap: '20px',
   },
   statCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
   },
   filterCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '12px 20px',
   },
   filterForm: {
@@ -555,7 +555,7 @@ const styles = {
     gap: '8px',
     height: '36px',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '0 10px',
     borderRadius: '4px',
   },
@@ -575,7 +575,7 @@ const styles = {
   filterDropdown: {
     height: '34px',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     color: '#fff',
     fontSize: '11px',
     padding: '0 8px',
@@ -583,17 +583,17 @@ const styles = {
     minWidth: '120px',
   },
   tableCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
   },
   chartCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '20px',
   },
   chartTooltip: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     fontSize: '10px',
   },
   emptyState: {
@@ -614,9 +614,9 @@ const styles = {
   },
   modalContainer: {
     width: '620px',
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     padding: '20px',
   },
   modalBody: {
@@ -634,7 +634,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
-    borderRight: '1px solid #1e2d3d',
+    borderRight: '1px solid var(--border)',
     paddingRight: '16px',
   },
   modalRightCol: {
@@ -653,7 +653,7 @@ const styles = {
     height: '45px',
     borderRadius: '50%',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -684,7 +684,7 @@ const styles = {
     flexDirection: 'column',
     gap: '4px',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '10px',
   },
   checkLabel: {
@@ -704,7 +704,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '10px',
   },
   stepNode: {
@@ -735,8 +735,8 @@ const styles = {
   loader: {
     width: '30px',
     height: '30px',
-    border: '2px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    border: '2px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     animation: 'spin 1s linear infinite',
   },
   errorContainer: {
@@ -754,9 +754,9 @@ const styles = {
     position: 'fixed',
     bottom: '24px',
     right: '24px',
-    backgroundColor: '#0d1117',
-    border: '1px solid #00ff88',
-    borderLeft: '4px solid #00ff88',
+    backgroundColor: 'var(--bg-panel)',
+    border: '1px solid var(--green)',
+    borderLeft: '4px solid var(--green)',
     color: '#ffffff',
     padding: '12px 20px',
     fontFamily: 'sans-serif',

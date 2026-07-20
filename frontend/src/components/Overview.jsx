@@ -149,7 +149,7 @@ function Overview({ flaggedCases = [], scrbEscalations = [] }) {
         <div className="stat-card">
           <div style={styles.statHeader}>
             <span className="stat-label">TOTAL REGISTERED CASES</span>
-            <Activity size={16} color="#00e5ff" />
+            <Activity size={16} color="var(--cyan)" />
           </div>
           <div className="stat-value">{stats.total_complaints.toLocaleString()}</div>
           <div className="stat-subtitle">Karnataka State Database</div>
@@ -216,7 +216,7 @@ function Overview({ flaggedCases = [], scrbEscalations = [] }) {
               style={styles.muteBtn}
               title={isMuted ? "Unmute sounds" : "Mute sounds"}
             >
-              {isMuted ? <VolumeX size={14} color="#ff2d55" /> : <Volume2 size={14} color="#00e5ff" />}
+              {isMuted ? <VolumeX size={14} color="var(--red)" /> : <Volume2 size={14} color="var(--cyan)" />}
             </button>
           </div>
         </div>
@@ -229,11 +229,11 @@ function Overview({ flaggedCases = [], scrbEscalations = [] }) {
               <CartesianGrid stroke="#1a2a3a" strokeDasharray="3 3" />
               <XAxis 
                 dataKey="month" 
-                stroke="#00e5ff" 
+                stroke="var(--cyan)" 
                 style={{ fontFamily: 'monospace', fontSize: '10px' }}
               />
               <YAxis 
-                stroke="#00e5ff" 
+                stroke="var(--cyan)" 
                 style={{ fontFamily: 'monospace', fontSize: '10px' }}
               />
               <Tooltip
@@ -244,14 +244,14 @@ function Overview({ flaggedCases = [], scrbEscalations = [] }) {
                   fontSize: '11px',
                   borderRadius: 0,
                 }}
-                itemStyle={{ color: '#00e5ff' }}
+                itemStyle={{ color: 'var(--cyan)' }}
                 labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
               />
               <Line 
                 type="monotone" 
                 dataKey="cases" 
                 name="Incidents"
-                stroke="#00e5ff" 
+                stroke="var(--cyan)" 
                 strokeWidth={2} 
                 dot={false}
                 activeDot={{ r: 4, stroke: '#0a0d14', strokeWidth: 2 }}
@@ -275,11 +275,11 @@ function Overview({ flaggedCases = [], scrbEscalations = [] }) {
               <CartesianGrid stroke="#1a2a3a" strokeDasharray="3 3" />
               <XAxis 
                 dataKey="name" 
-                stroke="#00e5ff" 
+                stroke="var(--cyan)" 
                 style={{ fontFamily: 'monospace', fontSize: '9px' }}
               />
               <YAxis 
-                stroke="#00e5ff" 
+                stroke="var(--cyan)" 
                 style={{ fontFamily: 'monospace', fontSize: '10px' }}
               />
               <Tooltip
@@ -290,9 +290,9 @@ function Overview({ flaggedCases = [], scrbEscalations = [] }) {
                   fontSize: '11px',
                   borderRadius: 0,
                 }}
-                itemStyle={{ color: '#00e5ff' }}
+                itemStyle={{ color: 'var(--cyan)' }}
               />
-              <Bar dataKey="cases" name="Cases" fill="#00e5ff" />
+              <Bar dataKey="cases" name="Cases" fill="var(--cyan)" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -301,7 +301,7 @@ function Overview({ flaggedCases = [], scrbEscalations = [] }) {
       {/* FLAGGED FOR REVIEW SECTION */}
       <div className="chart-card" style={{ marginBottom: '20px' }}>
         <div className="chart-header">
-          <span className="chart-title" style={{ color: '#ffaa00' }}>FLAGGED FOR REVIEW (INVESTIGATOR DASHBOARD)</span>
+          <span className="chart-title" style={{ color: 'var(--amber)' }}>FLAGGED FOR REVIEW (INVESTIGATOR DASHBOARD)</span>
         </div>
         {flaggedCases.length === 0 ? (
           <div style={styles.emptyTableText}>NO CASES FLAGGED FOR REVIEW.</div>
@@ -320,10 +320,10 @@ function Overview({ flaggedCases = [], scrbEscalations = [] }) {
               <tbody>
                 {flaggedCases.map(c => (
                   <tr key={c.id}>
-                    <td className="mono" style={{ color: '#00e5ff', fontWeight: 'bold' }}>{c.id}</td>
+                    <td className="mono" style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>{c.id}</td>
                     <td>{c.crime_type}</td>
                     <td>{c.victim_district || c.district}</td>
-                    <td style={{ color: '#ffaa00' }}>{c.reason || 'Flagged behavioral anomaly'}</td>
+                    <td style={{ color: 'var(--amber)' }}>{c.reason || 'Flagged behavioral anomaly'}</td>
                     <td className="mono">{c.flaggedAt}</td>
                   </tr>
                 ))}
@@ -336,7 +336,7 @@ function Overview({ flaggedCases = [], scrbEscalations = [] }) {
       {/* SCRB ESCALATIONS SECTION */}
       <div className="chart-card">
         <div className="chart-header">
-          <span className="chart-title" style={{ color: '#ff2d55' }}>SCRB ESCALATIONS</span>
+          <span className="chart-title" style={{ color: 'var(--red)' }}>SCRB ESCALATIONS</span>
         </div>
         {scrbEscalations.length === 0 ? (
           <div style={styles.emptyTableText}>NO CASES ESCALATED TO SCRB.</div>
@@ -356,11 +356,11 @@ function Overview({ flaggedCases = [], scrbEscalations = [] }) {
               <tbody>
                 {scrbEscalations.map(c => (
                   <tr key={c.id}>
-                    <td className="mono" style={{ color: '#FFD700', fontWeight: 'bold' }}>{c.scrbRef}</td>
-                    <td className="mono" style={{ color: '#00e5ff' }}>{c.id}</td>
+                    <td className="mono" style={{ color: 'var(--gold)', fontWeight: 'bold' }}>{c.scrbRef}</td>
+                    <td className="mono" style={{ color: 'var(--cyan)' }}>{c.id}</td>
                     <td>{c.crime_type}</td>
                     <td>{c.victim_district || c.district}</td>
-                    <td style={{ color: '#ff2d55' }}>{c.reason || 'Critical security escalation'}</td>
+                    <td style={{ color: 'var(--red)' }}>{c.reason || 'Critical security escalation'}</td>
                     <td className="mono">{c.escalatedAt}</td>
                   </tr>
                 ))}
@@ -394,7 +394,7 @@ const styles = {
   },
   filterDropdown: {
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     color: '#ffffff',
     fontSize: '11px',
     fontFamily: 'monospace',
@@ -430,7 +430,7 @@ const styles = {
     width: '40px',
     height: '40px',
     border: '2px solid #1a2a3a',
-    borderTop: '2px solid #00e5ff',
+    borderTop: '2px solid var(--cyan)',
     marginBottom: '20px',
   },
   loadingText: {

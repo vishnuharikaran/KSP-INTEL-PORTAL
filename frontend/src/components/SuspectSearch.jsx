@@ -123,7 +123,7 @@ function SuspectSearch() {
       {loading ? (
         <div style={styles.centeredState}>
           <div style={styles.loader}></div>
-          <div style={{ color: '#00e5ff', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>RETRIEVING SUSPECT INDEX...</div>
+          <div style={{ color: 'var(--cyan)', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>RETRIEVING SUSPECT INDEX...</div>
         </div>
       ) : error ? (
         <div style={styles.errorContainer}>
@@ -175,7 +175,7 @@ function SuspectSearch() {
                     <div style={styles.statLbl}>PRIOR CONVICT</div>
                   </div>
                   <div style={styles.statBox}>
-                    <div style={styles.statVal} style={{ color: '#00e5ff' }}>{s.ActiveCases}</div>
+                    <div style={styles.statVal} style={{ color: 'var(--cyan)' }}>{s.ActiveCases}</div>
                     <div style={styles.statLbl}>ACTIVE CASES</div>
                   </div>
                 </div>
@@ -217,7 +217,7 @@ function SuspectSearch() {
                 <span style={{ color: 'var(--red)', fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>
                   CLASSIFIED // TOP SECRET
                 </span>
-                <button className="modal-close-btn" onClick={() => setSelectedSuspect(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: 0 }}><X size={20} /></button>
+                <button className="modal-close-btn" onClick={() => setSelectedSuspect(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-label)', padding: 0 }}><X size={20} /></button>
               </div>
             </div>
 
@@ -289,7 +289,7 @@ function SuspectSearch() {
                       <div style={styles.quickCountLbl}>CONVICTIONS</div>
                     </div>
                     <div style={styles.quickCountBox}>
-                      <div style={styles.quickCountVal} style={{ color: '#00e5ff' }}>{selectedSuspect.ActiveCases}</div>
+                      <div style={styles.quickCountVal} style={{ color: 'var(--cyan)' }}>{selectedSuspect.ActiveCases}</div>
                       <div style={styles.quickCountLbl}>ACTIVE CASES</div>
                     </div>
                   </div>
@@ -334,13 +334,13 @@ function SuspectSearch() {
 
                   {/* Active Districts charts */}
                   <h4 style={styles.sectionHeader} style={{ marginTop: '20px', ...styles.sectionHeader }}>ACTIVE INCIDENT RATIOS</h4>
-                  <div style={{ height: '100px', width: '100%', background: '#070a12', padding: '10px', border: '1px solid #1e2d3d' }}>
+                  <div style={{ height: '100px', width: '100%', background: '#070a12', padding: '10px', border: '1px solid var(--border)' }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart layout="vertical" data={getDistrictChartData(selectedSuspect)}>
                         <XAxis type="number" stroke="#8a9ba8" fontSize={9} hide />
                         <YAxis dataKey="name" type="category" stroke="#8a9ba8" fontSize={8} width={70} tickLine={false} />
-                        <Tooltip contentStyle={{ background: '#0d1117', border: '1px solid #1e2d3d', fontSize: 10 }} />
-                        <Bar dataKey="count" fill="#00e5ff" barSize={8} />
+                        <Tooltip contentStyle={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', fontSize: 10 }} />
+                        <Bar dataKey="count" fill="var(--cyan)" barSize={8} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -391,8 +391,8 @@ const styles = {
     gap: '20px',
   },
   suspectCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
@@ -401,12 +401,12 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottom: '1px solid #1e2d3d',
+    borderBottom: '1px solid var(--border)',
     paddingBottom: '8px',
   },
   offenderId: {
     fontFamily: 'monospace',
-    color: '#00e5ff',
+    color: 'var(--cyan)',
     fontWeight: 'bold',
     fontSize: '12px',
   },
@@ -419,7 +419,7 @@ const styles = {
     width: '42px',
     height: '42px',
     borderRadius: '50%',
-    backgroundColor: '#1e2d3d',
+    backgroundColor: 'var(--border)',
     color: '#ffffff',
     display: 'flex',
     alignItems: 'center',
@@ -427,7 +427,7 @@ const styles = {
     fontSize: '14px',
     fontWeight: '700',
     fontFamily: 'monospace',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
   },
   nameCol: {
     display: 'flex',
@@ -450,7 +450,7 @@ const styles = {
     gap: '10px',
     background: '#070a12',
     padding: '10px',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     textAlign: 'center',
   },
   statBox: {
@@ -479,14 +479,14 @@ const styles = {
     alignItems: 'center',
     background: '#121822',
     color: '#8a9ba8',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     fontSize: '9px',
     padding: '2px 6px',
     fontFamily: 'monospace',
   },
   tagMore: {
     background: 'transparent',
-    color: '#00e5ff',
+    color: 'var(--cyan)',
     fontSize: '9px',
     padding: '2px',
     fontFamily: 'monospace',
@@ -514,14 +514,14 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    borderRight: '1px solid #1e2d3d',
+    borderRight: '1px solid var(--border)',
     paddingRight: '20px',
   },
   largeAvatar: {
     width: '90px',
     height: '90px',
     borderRadius: '50%',
-    backgroundColor: '#1e2d3d',
+    backgroundColor: 'var(--border)',
     color: '#ffffff',
     fontSize: '28px',
     fontWeight: 'bold',
@@ -553,7 +553,7 @@ const styles = {
     width: '100%',
     background: '#070a12',
     padding: '12px',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     marginBottom: '20px',
   },
   threatMeterHeader: {
@@ -567,7 +567,7 @@ const styles = {
   gaugeTrack: {
     height: '10px',
     background: '#121822',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     position: 'relative',
     marginBottom: '6px',
   },
@@ -580,7 +580,7 @@ const styles = {
   },
   quickCountBox: {
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '8px',
   },
   quickCountVal: {
@@ -604,7 +604,7 @@ const styles = {
     fontSize: '10px',
     color: '#8a9ba8',
     letterSpacing: '1px',
-    borderBottom: '1px solid #1e2d3d',
+    borderBottom: '1px solid var(--border)',
     paddingBottom: '4px',
     textTransform: 'uppercase',
   },
@@ -637,7 +637,7 @@ const styles = {
     left: '-13px',
     top: '8px',
     bottom: '-22px',
-    backgroundColor: '#1e2d3d',
+    backgroundColor: 'var(--border)',
     zIndex: 1,
   },
   timelineText: {
@@ -661,7 +661,7 @@ const styles = {
     fontSize: '9px',
     background: '#121822',
     padding: '0 4px',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
   },
   moTagsList: {
     display: 'flex',
@@ -671,7 +671,7 @@ const styles = {
   moTag: {
     fontSize: '9px',
     color: '#8a9ba8',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     background: '#070a12',
     padding: '3px 8px',
     fontFamily: 'monospace',
@@ -693,8 +693,8 @@ const styles = {
   loader: {
     width: '30px',
     height: '30px',
-    border: '2px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    border: '2px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     animation: 'spin 1s linear infinite',
   },
   errorContainer: {
@@ -712,9 +712,9 @@ const styles = {
     position: 'fixed',
     bottom: '24px',
     right: '24px',
-    backgroundColor: '#0d1117',
-    border: '1px solid #00ff88',
-    borderLeft: '4px solid #00ff88',
+    backgroundColor: 'var(--bg-panel)',
+    border: '1px solid var(--green)',
+    borderLeft: '4px solid var(--green)',
     color: '#ffffff',
     padding: '12px 20px',
     fontFamily: 'sans-serif',

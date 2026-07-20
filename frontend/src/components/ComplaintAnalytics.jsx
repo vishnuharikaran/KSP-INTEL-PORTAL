@@ -240,7 +240,7 @@ function ComplaintAnalytics() {
                         backgroundColor: selectedRecord?.id === rec.id ? 'var(--bg-tertiary)' : 'transparent',
                       }}
                     >
-                      <td style={{ fontWeight: 'bold', color: '#00e5ff' }}>{rec.id}</td>
+                      <td style={{ fontWeight: 'bold', color: 'var(--cyan)' }}>{rec.id}</td>
                       <td>{rec.victim_district}</td>
                       <td>{rec.crime_type}</td>
                       <td className="mono">{rec.platform}</td>
@@ -264,11 +264,11 @@ function ComplaintAnalytics() {
           {/* Pagination bar */}
           <div className="pagination-container">
             <div>
-              SHOWING <span className="mono" style={{ color: '#00e5ff' }}>{(metadata.page - 1) * 15 + 1}</span> TO{' '}
-              <span className="mono" style={{ color: '#00e5ff' }}>
+              SHOWING <span className="mono" style={{ color: 'var(--cyan)' }}>{(metadata.page - 1) * 15 + 1}</span> TO{' '}
+              <span className="mono" style={{ color: 'var(--cyan)' }}>
                 {Math.min(metadata.page * 15, metadata.total_records)}
               </span>{' '}
-              OF <span className="mono" style={{ color: '#00e5ff' }}>{metadata.total_records.toLocaleString()}</span> ENCRYPTED RECORDS
+              OF <span className="mono" style={{ color: 'var(--cyan)' }}>{metadata.total_records.toLocaleString()}</span> ENCRYPTED RECORDS
             </div>
 
             <div className="pagination-buttons">
@@ -289,7 +289,7 @@ function ComplaintAnalytics() {
                 <ChevronLeft size={16} />
               </button>
               <div style={styles.pageIndicator}>
-                PAGE <span className="mono" style={{ color: '#00e5ff' }}>{metadata.page}</span> OF{' '}
+                PAGE <span className="mono" style={{ color: 'var(--cyan)' }}>{metadata.page}</span> OF{' '}
                 <span className="mono">{metadata.total_pages}</span>
               </div>
               <button
@@ -328,7 +328,7 @@ function ComplaintAnalytics() {
             <div style={styles.drawerContent}>
               <div style={styles.drawerSection}>
                 <div style={styles.drawerSectionHeader}>
-                  <FileText size={14} color="#00e5ff" />
+                  <FileText size={14} color="var(--cyan)" />
                   <span>INCIDENT PARAMETERS</span>
                 </div>
                 <div style={styles.drawerFields}>
@@ -411,7 +411,7 @@ function ComplaintAnalytics() {
 
               <div style={styles.drawerSection}>
                 <div style={styles.drawerSectionHeader}>
-                  <ShieldCheck size={14} color="#00e5ff" />
+                  <ShieldCheck size={14} color="var(--cyan)" />
                   <span>OFFICER LOG HISTORY</span>
                 </div>
                 <div style={styles.officerNotes}>
@@ -498,7 +498,7 @@ const styles = {
     width: '24px',
     height: '24px',
     border: '2px solid #1a2a3a',
-    borderTop: '2px solid #00e5ff',
+    borderTop: '2px solid var(--cyan)',
   },
   pageBtn: {
     padding: '4px 10px',

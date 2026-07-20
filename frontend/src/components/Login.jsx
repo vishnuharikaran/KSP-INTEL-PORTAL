@@ -140,7 +140,7 @@ function Login({ onLogin }) {
         {/* Left Column — 50% */}
         <section style={styles.leftPanel}>
           <div style={styles.logoGroup}>
-            <Shield size={48} color="#00e5ff" style={{ marginBottom: '16px' }} />
+            <Shield size={48} color="var(--cyan)" style={{ marginBottom: '16px' }} />
             <h1 style={styles.mainTitle}>KSP INTEL</h1>
             <p style={styles.subTitle}>CYBER CRIME PORTAL</p>
             <div style={styles.accentLine}></div>
@@ -209,7 +209,7 @@ function Login({ onLogin }) {
           {/* Login Auth Card */}
           <div style={styles.loginCard}>
             <div style={styles.authHeaderGroup}>
-              <Lock size={20} color="#00e5ff" style={{ marginBottom: '8px' }} />
+              <Lock size={20} color="var(--cyan)" style={{ marginBottom: '8px' }} />
               <h2 style={styles.authTitle}>SECURE OFFICER AUTHENTICATION</h2>
             </div>
 
@@ -244,7 +244,7 @@ function Login({ onLogin }) {
                     onClick={() => setShowPassword(p => !p)}
                     style={styles.passwordToggle}
                   >
-                    {showPassword ? <EyeOff size={16} color="rgba(255,255,255,0.4)" /> : <Eye size={16} color="rgba(255,255,255,0.4)" />}
+                    {showPassword ? <EyeOff size={16} color="var(--text-label)" /> : <Eye size={16} color="var(--text-label)" />}
                   </button>
                 </div>
               </div>
@@ -298,7 +298,7 @@ function Login({ onLogin }) {
                 style={styles.demoRowItem}
               >
                 <span style={styles.demoUser}>SP-Ramesh</span>
-                <span style={{ ...styles.badge, color: 'var(--red)', borderColor: 'rgba(255,45,85,0.3)', backgroundColor: 'var(--red-dim)' }}>
+                <span style={{ ...styles.badge, color: 'var(--red)', borderColor: 'var(--red-border)', backgroundColor: 'var(--red-dim)' }}>
                   LEVEL 3 — TOP SECRET
                 </span>
               </button>
@@ -308,7 +308,7 @@ function Login({ onLogin }) {
                 style={styles.demoRowItem}
               >
                 <span style={styles.demoUser}>DSP-Kumar</span>
-                <span style={{ ...styles.badge, color: 'var(--amber)', borderColor: 'rgba(255,170,0,0.3)', backgroundColor: 'var(--amber-dim)' }}>
+                <span style={{ ...styles.badge, color: 'var(--amber)', borderColor: 'var(--amber-border)', backgroundColor: 'var(--amber-dim)' }}>
                   LEVEL 2 — RESTRICTED
                 </span>
               </button>
@@ -318,7 +318,7 @@ function Login({ onLogin }) {
                 style={styles.demoRowItem}
               >
                 <span style={styles.demoUser}>admin</span>
-                <span style={{ ...styles.badge, color: 'var(--gold)', borderColor: 'rgba(255,215,0,0.4)', backgroundColor: 'rgba(255,215,0,0.1)' }}>
+                <span style={{ ...styles.badge, color: 'var(--gold)', borderColor: 'rgba(255,215,0,0.4)', backgroundColor: 'var(--gold-bg)' }}>
                   LEVEL 4 — ADMIN
                 </span>
               </button>
@@ -377,12 +377,12 @@ const styles = {
     fontFamily: 'var(--font-mono)'
   },
   separator: {
-    color: 'rgba(255,255,255,0.2)',
+    color: 'var(--text-dim)',
     fontSize: '10px'
   },
   nodeText: {
     fontSize: '10px',
-    color: 'rgba(255,255,255,0.4)',
+    color: 'var(--text-label)',
     fontFamily: 'var(--font-mono)'
   },
   topHeaderRight: {
@@ -429,7 +429,7 @@ const styles = {
   subTitle: {
     fontSize: '11px',
     letterSpacing: '4px',
-    color: 'rgba(255,255,255,0.4)',
+    color: 'var(--text-label)',
     fontWeight: '600',
     margin: 0
   },
@@ -472,7 +472,7 @@ const styles = {
     fontSize: '13px'
   },
   statusLabel: {
-    color: 'rgba(255,255,255,0.6)'
+    color: 'var(--text-secondary)'
   },
   statusValue: {
     fontFamily: 'var(--font-mono)',
@@ -485,7 +485,7 @@ const styles = {
   },
   recentActivityTitle: {
     fontSize: '10px',
-    color: 'rgba(255,255,255,0.4)',
+    color: 'var(--text-label)',
     letterSpacing: '1px',
     fontWeight: '600',
     marginBottom: '4px'
@@ -508,7 +508,7 @@ const styles = {
     flex: 1
   },
   activityTime: {
-    color: 'rgba(255,255,255,0.4)',
+    color: 'var(--text-label)',
     fontFamily: 'var(--font-mono)'
   },
   rightPanel: {
@@ -536,7 +536,7 @@ const styles = {
   },
   restrictedHeader: {
     fontSize: '9px',
-    color: 'rgba(255,255,255,0.4)',
+    color: 'var(--text-label)',
     letterSpacing: '1px',
     fontWeight: '600'
   },
@@ -549,7 +549,7 @@ const styles = {
   },
   restrictedSubText: {
     fontSize: '11px',
-    color: 'rgba(255,255,255,0.4)'
+    color: 'var(--text-label)'
   },
   loginCard: {
     width: '100%',
@@ -597,7 +597,7 @@ const styles = {
   },
   inputLabel: {
     fontSize: '10px',
-    color: 'rgba(255,255,255,0.4)',
+    color: 'var(--text-label)',
     letterSpacing: '1px',
     fontWeight: '600'
   },
@@ -651,7 +651,7 @@ const styles = {
   toggleBtnInactive: {
     backgroundColor: 'transparent',
     border: 'var(--border)',
-    color: 'rgba(255,255,255,0.4)'
+    color: 'var(--text-label)'
   },
   submitBtn: {
     width: '100%',
@@ -677,7 +677,7 @@ const styles = {
   },
   dividerText: {
     fontSize: '9px',
-    color: 'rgba(255,255,255,0.3)',
+    color: 'var(--text-dim)',
     letterSpacing: '1px',
     backgroundColor: 'var(--bg-panel)',
     padding: '0 10px',
@@ -725,14 +725,14 @@ const styles = {
   },
   classifiedFooterText: {
     fontSize: '10px',
-    color: 'rgba(255,255,255,0.25)',
+    color: 'var(--text-dim)',
     letterSpacing: '2px',
     fontWeight: '600',
     margin: '0 0 6px 0'
   },
   classifiedWarningText: {
     fontSize: '10px',
-    color: 'rgba(255,255,255,0.25)',
+    color: 'var(--text-dim)',
     margin: 0
   }
 };

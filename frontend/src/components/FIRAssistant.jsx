@@ -281,7 +281,7 @@ function FIRAssistant() {
 
       {/* Toast */}
       {toast && (
-        <div style={{ ...S.toast, borderColor: toastType === 'error' ? '#ff3b30' : '#00ff88', borderLeft: `4px solid ${toastType === 'error' ? '#ff3b30' : '#00ff88'}` }}>
+        <div style={{ ...S.toast, borderColor: toastType === 'error' ? '#ff3b30' : 'var(--green)', borderLeft: `4px solid ${toastType === 'error' ? '#ff3b30' : 'var(--green)'}` }}>
           <Check size={14} />
           <span>{toast}</span>
         </div>
@@ -374,7 +374,7 @@ function FIRAssistant() {
                   <label key={key} style={S.cbLabel}>
                     <input type="checkbox" checked={evidence[key]}
                       onChange={() => toggleEvidence(key)}
-                      style={{ marginRight: '6px', accentColor: '#00e5ff' }} />
+                      style={{ marginRight: '6px', accentColor: 'var(--cyan)' }} />
                     {key}
                   </label>
                 ))}
@@ -396,7 +396,7 @@ function FIRAssistant() {
         </div>
 
         {/* ── RIGHT — PREVIEW PANEL ─────────────────────────── */}
-        <div className="chart-card" style={{ ...S.panel, borderTop: '2px solid #00e5ff' }}>
+        <div className="chart-card" style={{ ...S.panel, borderTop: '2px solid var(--cyan)' }}>
           <div className="chart-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
             <span className="chart-title">DRAFTED FIR PREVIEW</span>
             {firData && (
@@ -413,7 +413,7 @@ function FIRAssistant() {
                   className="cyber-btn"
                   style={{
                     ...S.iconBtn,
-                    background: saved ? '#00ff88' : '#00e5ff',
+                    background: saved ? 'var(--green)' : 'var(--cyan)',
                     color: '#070a12',
                     opacity: saving ? 0.7 : 1
                   }}
@@ -431,7 +431,7 @@ function FIRAssistant() {
             {loading ? (
               <div style={S.emptyState}>
                 <div style={S.spinner} />
-                <div style={{ color: '#00e5ff', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>
+                <div style={{ color: 'var(--cyan)', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>
                   DRAFTING FIR...
                 </div>
               </div>
@@ -449,9 +449,9 @@ function FIRAssistant() {
                   </div>
                   <span style={{
                     ...S.statusBadge,
-                    background: saved ? 'rgba(0,255,136,0.12)' : 'rgba(255,170,0,0.12)',
-                    color: saved ? '#00ff88' : '#ffaa00',
-                    border: `1px solid ${saved ? '#00ff88' : '#ffaa00'}`,
+                    background: saved ? 'var(--green-bg)' : 'var(--amber-bg)',
+                    color: saved ? 'var(--green)' : 'var(--amber)',
+                    border: `1px solid ${saved ? 'var(--green)' : 'var(--amber)'}`,
                   }}>
                     {saved ? '● FILED' : '● DRAFT'}
                   </span>
@@ -520,7 +520,7 @@ function FIRAssistant() {
                 <tbody>
                   {filedFIRs.map((fir) => (
                     <tr key={fir.fir_number}>
-                      <td className="mono" style={{ color: '#00e5ff' }}>{fir.fir_number}</td>
+                      <td className="mono" style={{ color: 'var(--cyan)' }}>{fir.fir_number}</td>
                       <td>{fir.complainant_name}</td>
                       <td>{fir.crime_type}</td>
                       <td>{fir.district}</td>
@@ -535,9 +535,9 @@ function FIRAssistant() {
                           fontSize: '9px',
                           fontFamily: 'monospace',
                           padding: '2px 8px',
-                          background: fir.status === 'Filed' ? 'rgba(0,255,136,0.1)' : 'rgba(255,170,0,0.1)',
-                          color: fir.status === 'Filed' ? '#00ff88' : '#ffaa00',
-                          border: `1px solid ${fir.status === 'Filed' ? '#00ff8840' : '#ffaa0040'}`,
+                          background: fir.status === 'Filed' ? 'var(--green-bg)' : 'var(--amber-bg)',
+                          color: fir.status === 'Filed' ? 'var(--green)' : 'var(--amber)',
+                          border: `1px solid ${fir.status === 'Filed' ? 'var(--green)40' : 'var(--amber)40'}`,
                         }}>
                           {fir.status.toUpperCase()}
                         </span>
@@ -559,28 +559,28 @@ function FIRAssistant() {
 const S = {
   container: { display: 'flex', flexDirection: 'column', width: '100%', gap: '20px' },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '20px' },
-  panel: { background: '#0d1117', border: '1px solid #1e2d3d' },
+  panel: { background: 'var(--bg-panel)', border: '1px solid var(--border)' },
   form: { display: 'flex', flexDirection: 'column', gap: '14px' },
   row: { display: 'flex', gap: '14px' },
   inputGroup: { display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 },
   label: { fontFamily: 'monospace', fontSize: '10px', color: '#8a9ba8', letterSpacing: '0.8px' },
-  select: { width: '100%', height: '39px', background: '#070a12', border: '1px solid #1e2d3d', color: '#fff', padding: '0 10px' },
-  cbGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', background: '#070a12', padding: '12px', border: '1px solid #1e2d3d' },
+  select: { width: '100%', height: '39px', background: '#070a12', border: '1px solid var(--border)', color: '#fff', padding: '0 10px' },
+  cbGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', background: '#070a12', padding: '12px', border: '1px solid var(--border)' },
   cbLabel: { fontSize: '11px', color: '#ffffff', fontFamily: 'monospace', cursor: 'pointer', display: 'flex', alignItems: 'center' },
-  preview: { flexGrow: 1, background: '#070a12', border: '1px solid #1e2d3d', minHeight: '420px', overflowY: 'auto', padding: '20px', position: 'relative' },
+  preview: { flexGrow: 1, background: '#070a12', border: '1px solid var(--border)', minHeight: '420px', overflowY: 'auto', padding: '20px', position: 'relative' },
   emptyState: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px' },
-  spinner: { width: '28px', height: '28px', border: '2px solid #1e2d3d', borderTop: '2px solid #00e5ff', borderRadius: '50%', animation: 'spin 1s linear infinite' },
-  firMeta: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', background: '#0d1117', border: '1px solid #1e2d3d', padding: '10px 14px' },
+  spinner: { width: '28px', height: '28px', border: '2px solid var(--border)', borderTop: '2px solid var(--cyan)', borderRadius: '50%', animation: 'spin 1s linear infinite' },
+  firMeta: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', background: 'var(--bg-panel)', border: '1px solid var(--border)', padding: '10px 14px' },
   metaLabel: { fontFamily: 'monospace', fontSize: '9px', color: '#4f616d', display: 'block', letterSpacing: '0.5px' },
   metaVal: { fontFamily: 'monospace', fontSize: '12px', color: '#ffffff', fontWeight: 'bold' },
   statusBadge: { fontSize: '9px', fontFamily: 'monospace', padding: '3px 10px', fontWeight: 'bold' },
-  tagStrip: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', borderBottom: '1px solid #1e2d3d', paddingBottom: '12px' },
+  tagStrip: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', borderBottom: '1px solid var(--border)', paddingBottom: '12px' },
   tagLabel: { fontSize: '9px', color: '#8a9ba8', fontFamily: 'monospace' },
-  tag: { fontSize: '10px', color: '#00e5ff', border: '1px solid #00e5ff33', padding: '2px 8px', fontFamily: 'monospace', background: 'rgba(0,229,255,0.05)' },
+  tag: { fontSize: '10px', color: 'var(--cyan)', border: '1px solid var(--cyan)33', padding: '2px 8px', fontFamily: 'monospace', background: 'rgba(0,229,255,0.05)' },
   firText: { margin: 0, padding: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '11px', color: '#ffffff', lineHeight: '1.7', background: 'transparent', border: 'none' },
   iconBtn: { padding: '5px 12px', fontSize: '10px', display: 'inline-flex', alignItems: 'center', gap: '5px' },
   errorBox: { background: 'rgba(255,59,48,0.1)', border: '1px solid #ff3b30', color: '#ff3b30', padding: '10px 14px', fontSize: '11px', fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '6px' },
-  toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#0d1117', border: '1px solid #00ff88', color: '#ffffff', padding: '12px 20px', fontFamily: 'sans-serif', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.6)', zIndex: 9999 },
+  toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: 'var(--bg-panel)', border: '1px solid var(--green)', color: '#ffffff', padding: '12px 20px', fontFamily: 'sans-serif', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.6)', zIndex: 9999 },
 };
 
 export default FIRAssistant;

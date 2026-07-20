@@ -69,6 +69,7 @@ function NetworkGraph() {
   const svgRef = useRef(null);
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 700, height: 450 });
+  const coordsRef = useRef({});
 
   // Default selection on mount
   useEffect(() => {
@@ -121,8 +122,19 @@ function NetworkGraph() {
   useEffect(() => {
     if (!svgRef.current) return;
 
-    let nodes = showPlayground ? [...defaultNodes] : [...data.nodes];
-    let links = showPlayground ? [...defaultLinks] : [...data.links];
+    // Deep copy to prevent mutating top-level constants
+    let nodes = (showPlayground ? defaultNodes : (data.nodes || [])).map(n => ({ ...n }));
+    let links = (showPlayground ? defaultLinks : (data.links || [])).map(l => ({ ...l }));
+
+    // Restore cached coordinates and pin them (fx, fy) so the layout is stable
+    nodes.forEach(n => {
+      if (coordsRef.current[n.id]) {
+        n.x = coordsRef.current[n.id].x;
+        n.y = coordsRef.current[n.id].y;
+        n.fx = coordsRef.current[n.id].x;
+        n.fy = coordsRef.current[n.id].y;
+      }
+    });
 
     // Filter nodes by enabled entity checkboxes
     nodes = nodes.filter(n => {
@@ -162,6 +174,13 @@ function NetworkGraph() {
     }
     simulation.stop();
 
+    // Cache the computed coordinates
+    nodes.forEach(n => {
+      if (n.x !== undefined && n.y !== undefined) {
+        coordsRef.current[n.id] = { x: n.x, y: n.y };
+      }
+    });
+
     // Draw Links
     const link = svg.append("g")
       .selectAll("line")
@@ -171,7 +190,7 @@ function NetworkGraph() {
         if (burnerPathActive && d.type === 'imei') return '#ff9500';
         if (d.type === 'imei') return '#d35400';
         if (d.type === 'behavioral') return '#2980b9';
-        return '#1a2a3a';
+        return 'var(--border)';
       })
       .attr("stroke-width", d => {
         if (burnerPathActive && d.type === 'imei') return 3;
@@ -252,7 +271,7 @@ function NetworkGraph() {
       })
       .attr("stroke", d => {
         if (d.id === 'person_a204') return '#ff3b30'; // Highlight A-204 with bright red
-        if (selectedNode && d.id === selectedNode.id) return '#00e5ff'; // Cyan selection ring
+        if (selectedNode && d.id === selectedNode.id) return 'var(--cyan)'; // Cyan selection ring
         return '#1a2a3a';
       })
       .attr("stroke-width", d => {
@@ -280,7 +299,7 @@ function NetworkGraph() {
     nodeGroup.append("text")
       .attr("y", d => (d.val || 18) / 2 + 17)
       .attr("text-anchor", "middle")
-      .attr("fill", "#ffffff")
+      .attr("fill", "var(--text-primary)")
       .style("font-family", "'JetBrains Mono', monospace")
       .style("font-size", "8px")
       .style("font-weight", "bold")
@@ -323,6 +342,7 @@ function NetworkGraph() {
   };
 
   const handleResetLayout = () => {
+    coordsRef.current = {};
     setShowPlayground(true);
     setData({ nodes: defaultNodes, links: defaultLinks });
     const a204Node = defaultNodes.find(n => n.id === 'person_a204');
@@ -427,9 +447,9 @@ function NetworkGraph() {
               style={styles.sliderInput} 
             />
             <div style={styles.sliderLabelsStrip}>
-              <span style={{ color: sliderVal === 1 ? '#00e5ff' : '#8a9ba8' }}>ALL</span>
-              <span style={{ color: sliderVal === 2 ? '#00e5ff' : '#8a9ba8' }}>CO-OCCURRENCE</span>
-              <span style={{ color: sliderVal === 3 ? '#00e5ff' : '#8a9ba8' }}>STRONG ONLY</span>
+              <span style={{ color: sliderVal === 1 ? 'var(--cyan)' : '#8a9ba8' }}>ALL</span>
+              <span style={{ color: sliderVal === 2 ? 'var(--cyan)' : '#8a9ba8' }}>CO-OCCURRENCE</span>
+              <span style={{ color: sliderVal === 3 ? 'var(--cyan)' : '#8a9ba8' }}>STRONG ONLY</span>
             </div>
           </div>
 
@@ -441,9 +461,9 @@ function NetworkGraph() {
                 { key: 'suspect', label: 'Suspects/Accused', color: '#ff3b30' },
                 { key: 'fir', label: 'Cases / FIRs', color: '#ff9500' },
                 { key: 'phone', label: 'Phone Connections', color: '#007aff' },
-                { key: 'vehicle', label: 'Vehicle Records', color: '#bf5af2' },
+                { key: 'vehicle', label: 'Vehicle Records', color: 'var(--purple)' },
                 { key: 'location', label: 'Locations / Hubs', color: '#34c759' },
-                { key: 'officer', label: 'Investigating Officers', color: '#00e5ff' }
+                { key: 'officer', label: 'Investigating Officers', color: 'var(--cyan)' }
               ].map(item => (
                 <label key={item.key} style={styles.checkboxLabel}>
                   <input 
@@ -465,13 +485,13 @@ function NetworkGraph() {
             <div style={styles.pathTracerBox}>
               <div style={styles.pathTracerRow}>
                 <span style={{ color: '#8a9ba8' }}>SOURCE:</span>
-                <span style={{ color: pathSource ? '#00e5ff' : '#ffffff' }} className="mono">
+                <span style={{ color: pathSource ? 'var(--cyan)' : '#ffffff' }} className="mono">
                   {pathSource || 'Click node'}
                 </span>
               </div>
               <div style={styles.pathTracerRow}>
                 <span style={{ color: '#8a9ba8' }}>TARGET:</span>
-                <span style={{ color: pathTarget ? '#00e5ff' : '#ffffff' }} className="mono">
+                <span style={{ color: pathTarget ? 'var(--cyan)' : '#ffffff' }} className="mono">
                   {pathTarget || 'Select Source'}
                 </span>
               </div>
@@ -502,9 +522,9 @@ function NetworkGraph() {
                 onClick={() => handleTabChange(tab)}
                 style={{
                   ...styles.tabBtn,
-                  color: activeTab === tab ? '#00e5ff' : '#8a9ba8',
-                  borderBottom: activeTab === tab ? '2px solid #00e5ff' : '2px solid transparent',
-                  backgroundColor: activeTab === tab ? '#0d1117' : 'transparent'
+                  color: activeTab === tab ? 'var(--cyan)' : '#8a9ba8',
+                  borderBottom: activeTab === tab ? '2px solid var(--cyan)' : '2px solid transparent',
+                  backgroundColor: activeTab === tab ? 'var(--bg-panel)' : 'transparent'
                 }}
               >
                 <span>{tab}</span>
@@ -677,15 +697,15 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     padding: '16px',
-    backgroundColor: '#0d1117',
-    border: '1px solid #1e2d3d',
+    backgroundColor: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     boxSizing: 'border-box'
   },
   sidebarTitle: {
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: '11px',
     fontWeight: 'bold',
-    color: '#00e5ff',
+    color: 'var(--cyan)',
     letterSpacing: '1px'
   },
   filterSection: {
@@ -743,7 +763,7 @@ const styles = {
   },
   pathTracerBox: {
     backgroundColor: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '10px',
     display: 'flex',
     flexDirection: 'column',
@@ -784,8 +804,8 @@ const styles = {
     fontFamily: 'monospace'
   },
   canvasPanel: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '10px',
     display: 'flex',
     flexDirection: 'column',
@@ -852,8 +872,8 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     padding: '16px',
-    backgroundColor: '#0d1117',
-    border: '1px solid #1e2d3d',
+    backgroundColor: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     boxSizing: 'border-box'
   },
   rightCardHeader: {
@@ -866,7 +886,7 @@ const styles = {
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: '11px',
     fontWeight: 'bold',
-    color: '#00e5ff'
+    color: 'var(--cyan)'
   },
   riskBadge: {
     fontSize: '8px',
@@ -919,7 +939,7 @@ const styles = {
   },
   overviewTextarea: {
     backgroundColor: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '8px 10px',
     fontSize: '11px',
     color: '#ffffff',
@@ -942,7 +962,7 @@ const styles = {
   },
   evidenceItem: {
     backgroundColor: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '8px 10px',
   },
   evidenceItemTop: {
@@ -996,9 +1016,9 @@ const styles = {
   },
   workspaceBtn: {
     width: '100%',
-    backgroundColor: 'rgba(0, 229, 255, 0.1)',
-    color: '#00e5ff',
-    border: '1px solid #00e5ff',
+    backgroundColor: 'var(--cyan-bg)',
+    color: 'var(--cyan)',
+    border: '1px solid var(--cyan)',
     height: '32px',
     fontSize: '10px',
     fontFamily: 'monospace',

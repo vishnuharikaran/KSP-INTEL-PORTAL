@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   BarChart, Bar, AreaChart, Area, XAxis, YAxis, 
   Tooltip, Legend, ResponsiveContainer, ReferenceLine, CartesianGrid 
@@ -19,54 +19,64 @@ const DISTRICTS = [
 ];
 
 function DistrictStats() {
-  const [selectedDistrict, setSelectedDistrict] = useState("Bengaluru Urban");
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(null);
-  const [error, setError] = useState("");
-
-  // Prime Time Alert Modal state
-  const [showAlertModal, setShowAlertModal] = useState(false);
-  const [alertPassword, setAlertPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [greenFlash, setGreenFlash] = useState(false);
-  const [toastMsg, setToastMsg] = useState("");
-  const [shakeInput, setShakeInput] = useState(false);
+  const [selectedDistrict, setSelectedDistrict] = 
+    useState('Bengaluru Urban');
+  const [districtData, setDistrictData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertPassword, setAlertPassword] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+  const [alertAcknowledged, setAlertAcknowledged] = useState({});
+  const shownRef = useRef({});
 
   // Suspect Dossier Modal State
   const [selectedOffenderId, setSelectedOffenderId] = useState(null);
   const [offenderDossier, setOffenderDossier] = useState(null);
   const [loadingDossier, setLoadingDossier] = useState(false);
-
-  const fetchDistrictStats = async (districtName) => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch(`http://127.0.0.1:8000/api/district-stats?district=${encodeURIComponent(districtName)}`);
-      if (!res.ok) throw new Error("Failed to fetch district statistics.");
-      const json = await res.json();
-      setData(json);
-      
-      // Auto open prime time alert modal on load
-      setAlertPassword("");
-      setPasswordError("");
-      setGreenFlash(false);
-      setShowAlertModal(true);
-    } catch (err) {
-      setError(err.message || "Connection error.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [toastMsg, setToastMsg] = useState("");
 
   useEffect(() => {
-    fetchDistrictStats(selectedDistrict);
+    if (!selectedDistrict) return;
+    if (shownRef.current[selectedDistrict]) return;
+    if (!districtData || districtData.length === 0) return;
+    shownRef.current[selectedDistrict] = true;
+    const timer = setTimeout(() => {
+      setShowAlert(true);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [selectedDistrict, districtData]);
+
+  useEffect(() => {
+    if (!selectedDistrict) return;
+    setIsLoading(true);
+    setDistrictData([]);
+    
+    const host = window.location.port === '5173' ? 'http://127.0.0.1:8000' : '';
+    fetch(`${host}/api/district-stats?district=${encodeURIComponent(selectedDistrict)}`)
+      .then(res => {
+        if (!res.ok) throw new Error('API error');
+        return res.json();
+      })
+      .then(data => {
+        const fetchedData = Array.isArray(data) ? data : [];
+        if (data && !Array.isArray(data)) {
+          Object.assign(fetchedData, data);
+          fetchedData.length = Object.keys(data).length || 1;
+        }
+        setDistrictData(fetchedData);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setDistrictData([]);
+        setIsLoading(false);
+      });
   }, [selectedDistrict]);
 
   // Modals Escape Listener
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'Escape') {
-        setShowAlertModal(false);
+        setShowAlert(false);
         setSelectedOffenderId(null);
       }
     };
@@ -79,23 +89,126 @@ function DistrictStats() {
   };
 
   const handleExport = () => {
-    window.print();
+    const {
+      overview: ov = {},
+      mom_table: momT = [],
+      top_offenders: topOff = [],
+      hotspots: hs = []
+    } = districtData || {};
+
+    const momRows = (momT || []).map(row => `
+      <tr>
+        <td>${row.district || ''}</td>
+        <td style="text-align:center">${row.total_cases ?? ''}</td>
+        <td style="text-align:center">${row.resolved ?? ''}</td>
+        <td style="text-align:center">${row.unresolved ?? ''}</td>
+        <td>${row.top_crime || ''}</td>
+        <td style="text-align:center">${row.status || ''}</td>
+      </tr>`).join('');
+
+    const offRows = (topOff || []).map(o => `
+      <tr>
+        <td>${o.offender_id || ''}</td>
+        <td>${o.crime_type || ''}</td>
+        <td>${o.mo || ''}</td>
+        <td style="text-align:center">${o.prior_convictions ?? ''}</td>
+        <td style="text-align:center">${(o.status || '').toUpperCase()}</td>
+      </tr>`).join('');
+
+    const hsRows = (hs || []).map(h => `
+      <tr>
+        <td>${h.station || h.name || ''}</td>
+        <td style="text-align:center">${h.cases ?? h.count ?? ''}</td>
+      </tr>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<title>District Statistics Report — ${selectedDistrict}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; font-size: 11pt; color: #000; background: #fff; padding: 30px 40px; }
+  h1 { font-size: 17pt; text-align: center; letter-spacing: 3px; }
+  h2 { font-size: 13pt; text-align: center; margin-top: 4px; }
+  h3 { font-size: 11pt; margin: 20px 0 8px 0; border-bottom: 1px solid #000; padding-bottom: 4px; }
+  .header { border-bottom: 3px double #000; padding-bottom: 14px; margin-bottom: 20px; text-align: center; }
+  .header p { font-size: 9pt; color: #444; margin-top: 5px; }
+  .meta { display: flex; justify-content: space-between; font-size: 10pt; background: #f2f2f2; border: 1px solid #bbb; padding: 8px 14px; margin-bottom: 16px; }
+  .stats-row { display: flex; gap: 16px; margin-bottom: 16px; }
+  .stat-box { flex: 1; border: 1px solid #bbb; padding: 10px; text-align: center; }
+  .stat-box .label { font-size: 8pt; color: #555; text-transform: uppercase; }
+  .stat-box .value { font-size: 16pt; font-weight: bold; margin: 4px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 16px; }
+  th { text-align: left; padding: 6px; font-weight: bold; background: #f0f0f0; border-bottom: 2px solid #000; }
+  td { padding: 6px; border-bottom: 1px solid #ddd; }
+  .footer { text-align: center; margin-top: 30px; font-size: 9pt; color: #666; border-top: 1px solid #ccc; padding-top: 12px; }
+  .sig { margin-top: 50px; display: flex; justify-content: space-between; font-size: 9pt; border-top: 1px solid #000; padding-top: 10px; }
+  @media print { body { padding: 10px 18px; } }
+</style>
+</head><body>
+  <div class="header">
+    <h1>KARNATAKA STATE POLICE</h1>
+    <h2>DISTRICT CRIME STATISTICS REPORT</h2>
+    <p>Cyber Crime Wing | Intelligence Analysis Division</p>
+  </div>
+  <div class="meta">
+    <span><strong>District:</strong> ${selectedDistrict}</span>
+    <span><strong>Generated:</strong> ${new Date().toLocaleString()} IST</span>
+  </div>
+
+  <h3>OVERVIEW SUMMARY</h3>
+  <div class="stats-row">
+    <div class="stat-box"><div class="label">Total Cases</div><div class="value">${ov.total_cases ?? 0}</div></div>
+    <div class="stat-box"><div class="label">Active Cases</div><div class="value">${ov.active_cases ?? 0}</div></div>
+    <div class="stat-box"><div class="label">Resolved</div><div class="value">${ov.resolved_cases ?? 0}</div></div>
+    <div class="stat-box"><div class="label">Repeat Offenders</div><div class="value">${ov.repeat_offenders_count ?? 0}</div></div>
+    <div class="stat-box"><div class="label">Avg Loss (₹)</div><div class="value">${Number(ov.avg_loss ?? 0).toLocaleString()}</div></div>
+  </div>
+
+  <h3>STATION-WISE CRIME MATRIX</h3>
+  <table>
+    <thead><tr><th>STATION</th><th style="text-align:center">TOTAL</th><th style="text-align:center">RESOLVED</th><th style="text-align:center">UNRESOLVED</th><th>TOP CRIME</th><th style="text-align:center">STATUS</th></tr></thead>
+    <tbody>${momRows || '<tr><td colspan="6">No data available</td></tr>'}</tbody>
+  </table>
+
+  <h3>TOP 5 ACTIVE OFFENDERS</h3>
+  <table>
+    <thead><tr><th>OFFENDER ID</th><th>CRIME TYPE</th><th>MODUS OPERANDI</th><th style="text-align:center">PRIOR CONVICTIONS</th><th style="text-align:center">STATUS</th></tr></thead>
+    <tbody>${offRows || '<tr><td colspan="5">No data available</td></tr>'}</tbody>
+  </table>
+
+  <h3>CRIME HOTSPOT AREAS</h3>
+  <table>
+    <thead><tr><th>STATION / AREA</th><th style="text-align:center">CASES</th></tr></thead>
+    <tbody>${hsRows || '<tr><td colspan="2">No data available</td></tr>'}</tbody>
+  </table>
+
+  <div class="sig">
+    <div><div>REPORT COMPILED BY: KSP INTELLIGENCE PORTAL</div><div>SUPERINTENDENT OF POLICE, CYBER DIVISION</div></div>
+    <div style="text-align:right"><div>SIGNATURE & OFFICIAL STAMP</div><div style="margin-top:25px;border-bottom:1px dashed #000;width:180px;float:right"></div></div>
+  </div>
+  <div class="footer">Karnataka State Police | Cyber Crime Wing | Auto-Generated via KSP Intelligence Portal</div>
+  <script>window.onload = function() { window.print(); }<\/script>
+</body></html>`;
+
+    const win = window.open('', '_blank', 'width=820,height=950');
+    if (!win) { alert('Pop-up blocked. Please allow pop-ups for this site.'); return; }
+    win.document.write(html);
+    win.document.close();
   };
 
-  const handleAcknowledgeAlert = (e) => {
-    e.preventDefault();
-    if (alertPassword === "KSP2026") {
-      setGreenFlash(true);
-      setToastMsg("Alert acknowledged — logged");
-      setTimeout(() => {
-        setShowAlertModal(false);
-        setGreenFlash(false);
-        setToastMsg("");
-      }, 1000);
+  const handlePasswordSubmit = () => {
+    if (alertPassword === 'KSP2026') {
+      setShowAlert(false);
+      setAlertPassword('');
+      setPasswordError(false);
+      setAlertAcknowledged(prev => ({
+        ...prev,
+        [selectedDistrict]: true
+      }));
     } else {
-      setPasswordError("INVALID AUTHORIZATION CODE");
-      setShakeInput(true);
-      setTimeout(() => setShakeInput(false), 400);
+      setPasswordError(true);
+      setAlertPassword('');
+      setTimeout(() => setPasswordError(false), 2000);
     }
   };
 
@@ -123,34 +236,64 @@ function DistrictStats() {
     setOffenderDossier(null);
   };
 
-  if (loading && !data) {
+  if (isLoading) {
     return (
-      <div style={styles.centeredState}>
-        <div style={styles.loader}></div>
-        <div style={{ color: '#00e5ff', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>
-          FETCHING DISTRICT STATS...
+      <div style={{ padding: '24px' }}>
+        {/* Skeleton for stat cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: '16px',
+          marginBottom: '24px'
+        }}>
+          {[1,2,3,4,5].map(i => (
+            <div key={i} style={{
+              height: '100px',
+              background: 'linear-gradient(90deg, var(--bg-card) 25%, #1a2332 50%, var(--bg-card) 75%)',
+              backgroundSize: '400% 100%',
+              animation: 'shimmer 1.5s infinite',
+              borderRadius: '10px'
+            }} />
+          ))}
         </div>
+        {/* Skeleton for charts */}
+        <div style={{
+          height: '300px',
+          background: 'linear-gradient(90deg, var(--bg-card) 25%, #1a2332 50%, var(--bg-card) 75%)',
+          backgroundSize: '400% 100%',
+          animation: 'shimmer 1.5s infinite',
+          borderRadius: '10px'
+        }} />
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div style={styles.errorContainer}>
-        <ShieldAlert size={16} />
-        <span>{error}</span>
-      </div>
-    );
-  }
-
-  const { overview, monthly_chart, temporal_hour, peak_hour, temporal_day, hotspots, age_chart, repeat_chart, top_offenders, comparison, mom_table } = data;
+  const {
+    overview = {
+      total_cases: 0,
+      active_cases: 0,
+      resolved_cases: 0,
+      repeat_offenders_count: 0,
+      avg_loss: 0
+    },
+    monthly_chart = [],
+    temporal_hour = [],
+    peak_hour = 0,
+    temporal_day = [],
+    hotspots = [],
+    age_chart = [],
+    repeat_chart = [],
+    top_offenders = [],
+    comparison = [],
+    mom_table = []
+  } = districtData || {};
 
   // Day of week peak color styling
-  const maxDayCount = Math.max(...temporal_day.map(d => d.count));
-  const peakDayName = temporal_day.sort((a,b) => b.count - a.count)[0]?.day || "Wednesday";
-  const peakHourStr = temporal_hour[peak_hour]?.hour || "12:00";
-  const topCrimeType = data.crime_mix && data.crime_mix.length > 0
-    ? [...data.crime_mix].sort((a,b) => b.value - a.value)[0]?.name
+  const maxDayCount = temporal_day && temporal_day.length > 0 ? Math.max(...temporal_day.map(d => d.count || 0)) : 0;
+  const peakDayName = temporal_day && temporal_day.length > 0 ? [...temporal_day].sort((a,b) => (b.count || 0) - (a.count || 0))[0]?.day || "Wednesday" : "Wednesday";
+  const peakHourStr = temporal_hour && temporal_hour.length > 0 && peak_hour !== undefined ? (temporal_hour[peak_hour]?.hour || "12:00") : "12:00";
+  const topCrimeType = districtData && districtData.crime_mix && districtData.crime_mix.length > 0
+    ? [...districtData.crime_mix].sort((a,b) => b.value - a.value)[0]?.name
     : "UPI Fraud";
 
   // Calculate next hour for risk window
@@ -162,7 +305,7 @@ function DistrictStats() {
   const CustomDayBar = (props) => {
     const { fill, x, y, width, height, count } = props;
     const isPeak = count === maxDayCount;
-    return <rect x={x} y={y} width={width} height={height} fill={isPeak ? '#ff2d55' : '#00e5ff'} />;
+    return <rect x={x} y={y} width={width} height={height} fill={isPeak ? 'var(--red)' : 'var(--cyan)'} />;
   };
 
   return (
@@ -174,62 +317,7 @@ function DistrictStats() {
         </div>
       )}
 
-      {/* Print-only stylesheet */}
-      <style>{`
-        @media print {
-          body {
-            background: #ffffff !important;
-            color: #000000 !important;
-          }
-          .sidebar, .top-bar, .breadcrumb, .app-footer, .no-print {
-            display: none !important;
-          }
-          .main-content {
-            margin-left: 0 !important;
-            padding: 0 !important;
-          }
-          .print-header {
-            display: block !important;
-            text-align: center;
-            border-bottom: 2px solid #000;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
-          }
-          .chart-card {
-            background: #ffffff !important;
-            border: 1px solid #cccccc !important;
-            page-break-inside: avoid;
-            margin-bottom: 20px !important;
-            box-shadow: none !important;
-          }
-          .stat-card {
-            background: #f9f9f9 !important;
-            border: 1px solid #cccccc !important;
-            color: #000000 !important;
-          }
-          .stat-value {
-            color: #000000 !important;
-          }
-          .cyber-table th {
-            background: #f0f0f0 !important;
-            color: #000000 !important;
-          }
-          .cyber-table td {
-            color: #000000 !important;
-            border-bottom: 1px solid #dddddd !important;
-          }
-        }
-        .print-header {
-          display: none;
-        }
-      `}</style>
 
-      {/* PRINT HEADER */}
-      <div className="print-header">
-        <h2 style={{ fontFamily: 'monospace', letterSpacing: '2px' }}>KARNATAKA STATE POLICE</h2>
-        <h3 style={{ fontFamily: 'monospace', color: '#555' }}>KSP DISTRICT INTELLIGENCE REPORT — {selectedDistrict.toUpperCase()}</h3>
-        <p style={{ fontSize: '10px', color: '#777' }}>Generated: {new Date().toLocaleString()} IST</p>
-      </div>
 
       {/* TOP — DISTRICT SELECTOR */}
       <div className="chart-card no-print" style={styles.selectorCard}>
@@ -240,7 +328,7 @@ function DistrictStats() {
               value={selectedDistrict}
               onChange={handleDistrictChange}
               className="cyber-input"
-              style={{ width: '100%', height: '38px', background: '#070a12', border: '1px solid #1e2d3d', color: '#fff', padding: '0 8px' }}
+              style={{ width: '100%', height: '38px', background: '#070a12', border: '1px solid var(--border)', color: '#fff', padding: '0 8px' }}
             >
               {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
@@ -263,22 +351,22 @@ function DistrictStats() {
         </div>
         <div className="stat-card" style={styles.statCard}>
           <div className="stat-label">CASES RESOLVED</div>
-          <div className="stat-value" style={{ color: '#00ff88' }}>{overview.resolved.toLocaleString()}</div>
+          <div className="stat-value" style={{ color: 'var(--green)' }}>{overview.resolved.toLocaleString()}</div>
           <div className="stat-subtitle">Status: Closed / Arrested</div>
         </div>
         <div className="stat-card" style={styles.statCard}>
           <div className="stat-label">ACTIVE INVESTIGATIONS</div>
-          <div className="stat-value" style={{ color: '#ffaa00' }}>{overview.active.toLocaleString()}</div>
+          <div className="stat-value" style={{ color: 'var(--amber)' }}>{overview.active.toLocaleString()}</div>
           <div className="stat-subtitle">Under active investigation</div>
         </div>
         <div className="stat-card" style={styles.statCard}>
           <div className="stat-label">REPEAT OFFENDERS COUNT</div>
-          <div className="stat-value" style={{ color: '#ff2d55' }}>{overview.repeat_offenders.toLocaleString()}</div>
+          <div className="stat-value" style={{ color: 'var(--red)' }}>{overview.repeat_offenders.toLocaleString()}</div>
           <div className="stat-subtitle">Suspects with priors &gt; 1</div>
         </div>
         <div className="stat-card" style={styles.statCard}>
           <div className="stat-label">AVERAGE LOSS AMOUNT</div>
-          <div className="stat-value" style={{ color: '#00e5ff' }}>₹{overview.avg_loss.toLocaleString()}</div>
+          <div className="stat-value" style={{ color: 'var(--cyan)' }}>₹{overview.avg_loss.toLocaleString()}</div>
           <div className="stat-subtitle">Cybercrime & fraud cases</div>
         </div>
       </div>
@@ -291,11 +379,11 @@ function DistrictStats() {
         <div style={{ height: '240px' }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={monthly_chart}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e2d3d" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="month" stroke="#8a9ba8" tick={{ fontSize: 10 }} />
               <YAxis stroke="#8a9ba8" tick={{ fontSize: 10 }} />
               <Tooltip contentStyle={styles.chartTooltip} />
-              <Bar dataKey="cases" fill="#00e5ff" barSize={35} />
+              <Bar dataKey="cases" fill="var(--cyan)" barSize={35} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -312,12 +400,12 @@ function DistrictStats() {
             <div style={{ height: '200px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={temporal_hour} margin={{ left: -20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2d3d" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis dataKey="hour" stroke="#8a9ba8" tick={{ fontSize: 9 }} />
                   <YAxis stroke="#8a9ba8" tick={{ fontSize: 9 }} />
                   <Tooltip contentStyle={styles.chartTooltip} />
-                  <Area type="monotone" dataKey="count" stroke="#00e5ff" fill="rgba(0, 229, 255, 0.15)" />
-                  <ReferenceLine x={temporal_hour[peak_hour]?.hour} stroke="#ff2d55" label={{ value: `PEAK: ${temporal_hour[peak_hour]?.hour}`, fill: '#ff2d55', position: 'top', fontSize: 9 }} />
+                  <Area type="monotone" dataKey="count" stroke="var(--cyan)" fill="var(--cyan-bg)" />
+                  <ReferenceLine x={temporal_hour[peak_hour]?.hour} stroke="var(--red)" label={{ value: `PEAK: ${temporal_hour[peak_hour]?.hour}`, fill: 'var(--red)', position: 'top', fontSize: 9 }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -328,7 +416,7 @@ function DistrictStats() {
             <div style={{ height: '200px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={temporal_day} margin={{ left: -20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2d3d" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis dataKey="day" stroke="#8a9ba8" tick={{ fontSize: 9 }} />
                   <YAxis stroke="#8a9ba8" tick={{ fontSize: 9 }} />
                   <Tooltip contentStyle={styles.chartTooltip} />
@@ -359,10 +447,10 @@ function DistrictStats() {
             </thead>
             <tbody>
               {hotspots.map((row, idx) => {
-                const badgeColor = row.status === "OVERLOADED" ? "#ff2d55" : row.status === "ACTIVE" ? "#ffaa00" : "#00ff88";
+                const badgeColor = row.status === "OVERLOADED" ? "var(--red)" : row.status === "ACTIVE" ? "var(--amber)" : "var(--green)";
                 const unresolvedCount = row.cases - row.resolved;
                 const unresolvedPct = row.cases > 0 ? Math.round((unresolvedCount / row.cases) * 100) : 0;
-                const unresolvedColor = unresolvedCount > 20 ? '#ff2d55' : unresolvedCount >= 10 ? '#ffaa00' : '#ffffff';
+                const unresolvedColor = unresolvedCount > 20 ? 'var(--red)' : unresolvedCount >= 10 ? 'var(--amber)' : '#ffffff';
 
                 return (
                   <tr key={idx}>
@@ -403,11 +491,11 @@ function DistrictStats() {
           <div style={{ height: '220px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={age_chart} margin={{ left: -25 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e2d3d" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="group" stroke="#8a9ba8" tick={{ fontSize: 9 }} />
                 <YAxis stroke="#8a9ba8" tick={{ fontSize: 9 }} />
                 <Tooltip contentStyle={styles.chartTooltip} />
-                <Bar dataKey="count" fill="#bf5af2" barSize={30} />
+                <Bar dataKey="count" fill="var(--purple)" barSize={30} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -420,11 +508,11 @@ function DistrictStats() {
           <div style={{ height: '220px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={repeat_chart} margin={{ left: -25 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e2d3d" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="name" stroke="#8a9ba8" tick={{ fontSize: 9 }} />
                 <YAxis stroke="#8a9ba8" tick={{ fontSize: 9 }} />
                 <Tooltip contentStyle={styles.chartTooltip} />
-                <Bar dataKey="value" fill="#00ff88" barSize={30} />
+                <Bar dataKey="value" fill="var(--green)" barSize={30} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -451,12 +539,12 @@ function DistrictStats() {
             <tbody>
               {top_offenders.map((offender, idx) => (
                 <tr key={idx}>
-                  <td className="mono" style={{ color: '#00e5ff', fontWeight: 'bold' }}>{offender.offender_id}</td>
+                  <td className="mono" style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>{offender.offender_id}</td>
                   <td>{offender.crime_type}</td>
                   <td style={{ fontSize: '11px', color: '#8a9ba8' }}>{offender.mo}</td>
                   <td className="mono">{offender.prior_convictions}</td>
                   <td>
-                    <span className="badge" style={{ backgroundColor: 'rgba(255, 45, 85, 0.1)', color: '#ff2d55', borderColor: 'rgba(255, 45, 85, 0.2)' }}>
+                    <span className="badge" style={{ backgroundColor: 'var(--red-bg)', color: 'var(--red)', borderColor: 'rgba(255, 45, 85, 0.2)' }}>
                       {offender.status.toUpperCase()}
                     </span>
                   </td>
@@ -485,13 +573,13 @@ function DistrictStats() {
               layout="vertical"
               margin={{ top: 10, right: 30, left: 40, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e2d3d" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis type="number" stroke="#8a9ba8" tick={{ fontSize: 9 }} />
               <YAxis dataKey="metric" type="category" stroke="#8a9ba8" tick={{ fontSize: 9 }} />
               <Tooltip contentStyle={styles.chartTooltip} />
               <Legend wrapperStyle={{ fontSize: '10px' }} />
-              <Bar dataKey="district_val" name="District" fill="#00e5ff" />
-              <Bar dataKey="state_avg" name="State Avg" fill="#ffaa00" />
+              <Bar dataKey="district_val" name="District" fill="var(--cyan)" />
+              <Bar dataKey="state_avg" name="State Avg" fill="var(--amber)" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -501,8 +589,8 @@ function DistrictStats() {
       {selectedOffenderId && offenderDossier && (
         <div style={styles.modalOverlay}>
           <div className="chart-card" style={styles.modalContainer}>
-            <div className="chart-header" style={{ borderBottom: '1px solid #1e2d3d', paddingBottom: '10px' }}>
-              <span className="chart-title" style={{ color: '#00e5ff' }}>SUSPECT DOSSIER — {selectedOffenderId}</span>
+            <div className="chart-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+              <span className="chart-title" style={{ color: 'var(--cyan)' }}>SUSPECT DOSSIER — {selectedOffenderId}</span>
               <button className="cyber-btn-outline" onClick={closeDossier} style={{ padding: '3px 8px', fontSize: '9px' }}>
                 CLOSE
               </button>
@@ -520,7 +608,7 @@ function DistrictStats() {
                   </div>
                   <div style={styles.modalInfoGroup}>
                     <span style={styles.modalInfoLabel}>THREAT RISK LEVEL</span>
-                    <span className="badge" style={{ backgroundColor: 'rgba(255, 45, 85, 0.15)', color: '#ff2d55' }}>
+                    <span className="badge" style={{ backgroundColor: 'var(--red-bg)', color: 'var(--red)' }}>
                       {offenderDossier.RiskLevel} (SCORE: {offenderDossier.RiskScore})
                     </span>
                   </div>
@@ -538,7 +626,7 @@ function DistrictStats() {
                     <span style={styles.modalInfoLabel}>ACTIVE JURISDICTIONS</span>
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
                       {offenderDossier.Districts.map(d => (
-                        <span key={d} className="badge" style={{ backgroundColor: 'rgba(0,229,255,0.08)', color: '#00e5ff' }}>{d}</span>
+                        <span key={d} className="badge" style={{ backgroundColor: 'rgba(0,229,255,0.08)', color: 'var(--cyan)' }}>{d}</span>
                       ))}
                     </div>
                   </div>
@@ -550,26 +638,26 @@ function DistrictStats() {
       )}
 
       {/* PRIME TIME ALERTS POPUP MODAL */}
-      {showAlertModal && (
+      {showAlert && (
         <div style={styles.modalOverlay}>
           <div 
             className="chart-card" 
             style={{ 
               ...styles.alertModalContainer,
-              borderTop: greenFlash ? '3px solid #00ff88' : '3px solid #ff2d55',
+              borderTop: passwordError ? '3px solid var(--red)' : '3px solid var(--cyan)',
               position: 'relative'
             }}
           >
             {/* Close button Escape and manual */}
             <button 
-              onClick={() => setShowAlertModal(false)}
+              onClick={() => setShowAlert(false)}
               style={{
                 position: 'absolute',
                 top: '16px',
                 right: '16px',
                 background: 'none',
                 border: 'none',
-                color: 'rgba(255,255,255,0.4)',
+                color: 'var(--text-label)',
                 cursor: 'pointer',
                 fontSize: '16px',
                 outline: 'none'
@@ -579,10 +667,10 @@ function DistrictStats() {
               ✕
             </button>
 
-            <Shield size={32} color={greenFlash ? "#00ff88" : "#ff2d55"} style={{ display: 'block', margin: '0 auto 12px auto' }} />
+            <Shield size={32} color={passwordError ? "var(--red)" : "var(--cyan)"} style={{ display: 'block', margin: '0 auto 12px auto' }} />
             
             <div style={styles.alertHeader}>
-              <AlertTriangle size={18} color={greenFlash ? "#00ff88" : "#ff2d55"} />
+              <AlertTriangle size={18} color={passwordError ? "var(--red)" : "var(--cyan)"} />
               <span style={styles.alertTitle}>PRIME TIME INTELLIGENCE ALERT</span>
             </div>
             <h3 style={styles.alertDistrictName}>{selectedDistrict.toUpperCase()}</h3>
@@ -604,7 +692,7 @@ function DistrictStats() {
               </div>
               <div style={styles.alertDetailRow}>
                 <span style={styles.alertLabel}>RISK WINDOW:</span>
-                <span style={{ ...styles.alertVal, color: '#ff2d55' }}>
+                <span style={{ ...styles.alertVal, color: 'var(--red)' }}>
                   {peakDayName.toUpperCase()} {peakHourStr}–{endHourStr}
                 </span>
               </div>
@@ -616,24 +704,48 @@ function DistrictStats() {
               This intelligence is CONFIDENTIAL. Enter authorization code to acknowledge.
             </p>
 
-            <form onSubmit={handleAcknowledgeAlert} style={styles.alertForm}>
+            <form onSubmit={e => { e.preventDefault(); handlePasswordSubmit(); }} style={styles.alertForm}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <input 
+                <input
                   type="password"
                   value={alertPassword}
                   onChange={e => {
                     setAlertPassword(e.target.value);
-                    setPasswordError("");
+                    setPasswordError(false);
                   }}
-                  placeholder="ENTER ACCESS AUTH CODE..."
-                  className={`cyber-input ${shakeInput ? 'shake-input' : ''}`}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handlePasswordSubmit();
+                  }}
+                  placeholder="Enter authorization code"
+                  autoFocus
                   style={{
-                    ...styles.alertInput,
-                    fontFamily: 'var(--font-mono)',
-                    borderColor: passwordError ? '#ff2d55' : greenFlash ? '#00ff88' : '#1e2d3d'
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'var(--bg-card)',
+                    border: passwordError 
+                      ? '1px solid var(--red)' 
+                      : '1px solid var(--border)',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontFamily: 'JetBrains Mono',
+                    fontSize: '14px',
+                    outline: 'none',
+                    animation: passwordError 
+                      ? 'shake 0.4s ease' 
+                      : 'none',
+                    marginBottom: '8px'
                   }}
                 />
-                {passwordError && <span style={styles.errorText}>{passwordError}</span>}
+                {passwordError && (
+                  <div style={{
+                    color: 'var(--red)',
+                    fontSize: '11px',
+                    letterSpacing: '1px',
+                    marginBottom: '12px'
+                  }}>
+                    ✗ INVALID AUTHORIZATION CODE
+                  </div>
+                )}
               </div>
 
               <button type="submit" className="cyber-btn" style={styles.alertBtn}>
@@ -655,8 +767,8 @@ const styles = {
     gap: '20px',
   },
   selectorCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '16px 20px',
   },
   selectorGrid: {
@@ -681,8 +793,8 @@ const styles = {
     letterSpacing: '0.5px',
   },
   statCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
   },
   chartRow: {
     display: 'flex',
@@ -691,15 +803,15 @@ const styles = {
   },
   halfWidthCard: {
     flex: 1,
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '16px',
     minWidth: 0,
   },
   fullWidthCard: {
     width: '100%',
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '20px',
   },
   subChartTitle: {
@@ -711,8 +823,8 @@ const styles = {
     fontWeight: 'bold',
   },
   chartTooltip: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     fontSize: '10px',
   },
   centeredState: {
@@ -726,8 +838,8 @@ const styles = {
   loader: {
     width: '30px',
     height: '30px',
-    border: '2px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    border: '2px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     animation: 'spin 1s linear infinite',
   },
   errorContainer: {
@@ -752,9 +864,9 @@ const styles = {
   },
   modalContainer: {
     width: '540px',
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     padding: '20px',
   },
   modalBody: {
@@ -793,16 +905,16 @@ const styles = {
   },
   alertModalContainer: {
     width: '480px',
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '24px',
-    boxShadow: '0 0 30px rgba(255, 45, 85, 0.1)',
+    boxShadow: '0 0 30px var(--red-bg)',
   },
   alertHeader: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    color: '#ff2d55',
+    color: 'var(--red)',
   },
   alertTitle: {
     fontFamily: "'JetBrains Mono', monospace",
@@ -819,7 +931,7 @@ const styles = {
   },
   alertDivider: {
     height: '1px',
-    background: '#1e2d3d',
+    background: 'var(--border)',
     margin: '14px 0',
   },
   alertDetailsGrid: {
@@ -855,7 +967,7 @@ const styles = {
   alertInput: {
     height: '36px',
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     color: '#ffffff',
     textAlign: 'center',
     fontFamily: 'monospace',
@@ -865,9 +977,9 @@ const styles = {
   },
   alertBtn: {
     height: '36px',
-    background: '#ff2d55',
-    border: '1px solid #ff2d55',
-    color: '#0d1117',
+    background: 'var(--red)',
+    border: '1px solid var(--red)',
+    color: 'var(--bg-panel)',
     fontWeight: 'bold',
     fontFamily: 'monospace',
     cursor: 'pointer',
@@ -875,7 +987,7 @@ const styles = {
   },
   errorText: {
     fontSize: '9px',
-    color: '#ff2d55',
+    color: 'var(--red)',
     fontFamily: 'monospace',
     textAlign: 'center',
   },
@@ -883,9 +995,9 @@ const styles = {
     position: 'fixed',
     bottom: '24px',
     right: '24px',
-    backgroundColor: '#0d1117',
-    border: '1px solid #00ff88',
-    borderLeft: '4px solid #00ff88',
+    backgroundColor: 'var(--bg-panel)',
+    border: '1px solid var(--green)',
+    borderLeft: '4px solid var(--green)',
     color: '#ffffff',
     padding: '12px 20px',
     fontFamily: 'sans-serif',

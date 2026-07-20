@@ -10,6 +10,7 @@ function CrimeMap() {
 
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
+  const tileLayerRef = useRef(null);
   const markersLayerGroup = useRef(null);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ function CrimeMap() {
       }).setView([15.3, 75.7], 7);
 
       // Add CartoDB Dark Matter map tile layer
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      tileLayerRef.current = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 18,
         minZoom: 6
       }).addTo(mapRef.current);
@@ -96,8 +97,8 @@ function CrimeMap() {
       const activeStation = `${dist.name} ${stations[seed % stations.length]}`;
 
       const popupContent = `
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #ffffff; background-color: #10141f; padding: 10px; border: 1px solid #1a2a3a; border-radius: 0;">
-          <h4 style="margin: 0 0 6px 0; color: #00e5ff; font-size: 13px; text-transform: uppercase;">${dist.name}</h4>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-primary); background-color: var(--bg-panel); padding: 10px; border: var(--border); border-radius: 4px;">
+          <h4 style="margin: 0 0 6px 0; color: var(--cyan); font-size: 13px; text-transform: uppercase;">${dist.name}</h4>
           <div style="margin-bottom: 4px;"><b>TOTAL CRIMES:</b> ${dist.cases}</div>
           <div style="margin-bottom: 4px;"><b>TOP CRIME:</b> ${topCrime}</div>
           <div style="margin-bottom: 4px;"><b>YOY CHANGE:</b> ${yoyStr}</div>
@@ -118,6 +119,7 @@ function CrimeMap() {
     });
 
   }, [loading, error, districts]);
+
 
   if (loading) {
     return (
@@ -185,7 +187,7 @@ function CrimeMap() {
               </div>
               <div style={styles.dossierStat}>
                 <span style={styles.dossierLabel}>ACTIVE STATIONS</span>
-                <span style={{ ...styles.dossierVal, color: '#00e5ff' }}>5 Active</span>
+                <span style={{ ...styles.dossierVal, color: 'var(--cyan)' }}>5 Active</span>
               </div>
             </div>
 
@@ -199,7 +201,7 @@ function CrimeMap() {
                 .map(([name, count]) => (
                   <div key={name} style={styles.listItem}>
                     <span>{name}</span>
-                    <span className="mono" style={{ color: '#00e5ff' }}>
+                    <span className="mono" style={{ color: 'var(--cyan)' }}>
                       {count} ({((count / selectedDistrict.cases) * 100).toFixed(0)}%)
                     </span>
                   </div>
@@ -239,7 +241,7 @@ const styles = {
     width: '40px',
     height: '40px',
     border: '2px solid #1a2a3a',
-    borderTop: '2px solid #00e5ff',
+    borderTop: '2px solid var(--cyan)',
     marginBottom: '20px',
   },
   loadingText: {
@@ -318,7 +320,7 @@ const styles = {
   dossierTitle: {
     fontFamily: 'monospace',
     fontSize: '18px',
-    color: '#00e5ff',
+    color: 'var(--cyan)',
     borderBottom: '1px solid #1a2a3a',
     paddingBottom: '8px',
     marginBottom: '14px',

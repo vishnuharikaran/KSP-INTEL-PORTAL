@@ -106,7 +106,7 @@ function AIClassifier() {
     if (act.includes('notice')) {
       return { borderLeft: '4px solid #ffcc00', color: '#ffcc00' };
     }
-    return { borderLeft: '4px solid #00e5ff', color: '#00e5ff' };
+    return { borderLeft: '4px solid var(--cyan)', color: 'var(--cyan)' };
   };
 
   return (
@@ -115,7 +115,7 @@ function AIClassifier() {
       <div className="chart-card" style={{ marginBottom: '20px' }}>
         <div className="chart-header">
           <span className="chart-title">BILINGUAL COGNITIVE COMPLAINT PARSER</span>
-          <span style={{ fontSize: '10px', color: '#00e5ff', fontFamily: 'monospace' }}>
+          <span style={{ fontSize: '10px', color: 'var(--cyan)', fontFamily: 'monospace' }}>
             ● ENGLISH & KANNADA DUAL RESOLVE
           </span>
         </div>
@@ -220,7 +220,7 @@ function AIClassifier() {
                   <div style={styles.confidenceMeter}>
                     <div style={styles.meterHeader}>
                       <span style={{ color: '#8a9ba8', fontSize: '11px' }}>MODEL CONFIDENCE SCORE:</span>
-                      <span className="mono" style={{ color: '#00e5ff', fontWeight: 'bold' }}>
+                      <span className="mono" style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>
                         {(result.confidence * 100).toFixed(0)}%
                       </span>
                     </div>
@@ -244,7 +244,7 @@ function AIClassifier() {
                 
                 <div style={styles.legalSection}>
                   <div style={styles.legalLabel}>
-                    <BookOpen size={12} color="#00e5ff" />
+                    <BookOpen size={12} color="var(--cyan)" />
                     <span>BHARATIYA NYAYA SANHITA (BNS) SECTIONS</span>
                   </div>
                   <div style={styles.legalText} className="mono">
@@ -254,7 +254,7 @@ function AIClassifier() {
 
                 <div style={styles.legalSection} style={{ marginTop: '16px' }}>
                   <div style={styles.legalLabel}>
-                    <Layers size={12} color="#00e5ff" />
+                    <Layers size={12} color="var(--cyan)" />
                     <span>INFORMATION TECHNOLOGY (IT) ACT SECTIONS</span>
                   </div>
                   <div style={styles.legalText} className="mono">
@@ -446,7 +446,7 @@ const styles = {
     fontSize: '22px',
     fontWeight: 'bold',
     fontFamily: 'monospace',
-    color: '#00e5ff',
+    color: 'var(--cyan)',
   },
   confidenceMeter: {
     display: 'flex',
@@ -464,7 +464,7 @@ const styles = {
   },
   meterBar: {
     height: '100%',
-    backgroundColor: '#00e5ff',
+    backgroundColor: 'var(--cyan)',
   },
   legalSection: {
     display: 'flex',

@@ -24,10 +24,10 @@ function LiveIntelFeed() {
 
   const getSeverityColor = (sev) => {
     switch (sev) {
-      case 'CRITICAL': return '#ff2d55';
+      case 'CRITICAL': return 'var(--red)';
       case 'HIGH': return '#ff6b35';
-      case 'MEDIUM': return '#ffaa00';
-      case 'INFO': return '#00e5ff';
+      case 'MEDIUM': return 'var(--amber)';
+      case 'INFO': return 'var(--cyan)';
       default: return '#8a9ba8';
     }
   };
@@ -177,12 +177,12 @@ function LiveIntelFeed() {
   };
 
   const pieColors = [
-    '#00e5ff', // cyan
+    'var(--cyan)', // cyan
     '#ff9500', // orange
     '#ffcc00', // yellow
     '#ff3b30', // red
     '#34c759', // green
-    '#bf5af2', // purple
+    'var(--purple)', // purple
     '#007aff', // blue
   ];
 
@@ -209,7 +209,7 @@ function LiveIntelFeed() {
           <div className="chart-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span className="pulse-dot"></span>
-              <span className="chart-title" style={{ color: '#00e5ff' }}>LIVE TRANSMISSION FEED</span>
+              <span className="chart-title" style={{ color: 'var(--cyan)' }}>LIVE TRANSMISSION FEED</span>
               <span style={{ fontSize: '10px', color: '#8a9ba8', fontFamily: 'monospace' }}>
                 | {eventsCount} EVENTS LOGGED IN DATABASE
               </span>
@@ -241,7 +241,7 @@ function LiveIntelFeed() {
                     className="slide-down-event"
                     style={{ 
                       ...styles.feedCard, 
-                      borderColor: '#1e2d3d', 
+                      borderColor: 'var(--border)', 
                       borderLeft: `4px solid ${borderClr}` 
                     }}
                   >
@@ -270,7 +270,7 @@ function LiveIntelFeed() {
                         <button className="cyber-btn-outline" style={styles.cardActionBtn} onClick={() => showToast(`Opening logs for case ${item.id}.`)}>
                           VIEW
                         </button>
-                        <button className="cyber-btn" style={{ ...styles.cardActionBtn, background: '#00e5ff', color: '#070a12' }} onClick={() => showToast(`Dispatching patrol unit to ${item.station}.`)}>
+                        <button className="cyber-btn" style={{ ...styles.cardActionBtn, background: 'var(--cyan)', color: '#070a12' }} onClick={() => showToast(`Dispatching patrol unit to ${item.station}.`)}>
                           ASSIGN UNIT
                         </button>
                       </div>
@@ -297,20 +297,20 @@ function LiveIntelFeed() {
               </div>
               <div style={styles.metricItem}>
                 <span style={styles.metricLbl}>CRITICAL EVENTS</span>
-                <span style={styles.metricVal} style={{ ...styles.metricVal, color: '#ff2d55' }}>{panelStats.criticalCount}</span>
+                <span style={styles.metricVal} style={{ ...styles.metricVal, color: 'var(--red)' }}>{panelStats.criticalCount}</span>
               </div>
               <div style={styles.metricItem}>
                 <span style={styles.metricLbl}>ACTIVE DISTRICTS</span>
-                <span style={styles.metricVal} style={{ ...styles.metricVal, color: '#ffaa00' }}>{panelStats.districtsActive}</span>
+                <span style={styles.metricVal} style={{ ...styles.metricVal, color: 'var(--amber)' }}>{panelStats.districtsActive}</span>
               </div>
               <div style={styles.metricItem}>
                 <span style={styles.metricLbl}>LAST UPDATE</span>
-                <span style={styles.metricVal} style={{ ...styles.metricVal, color: '#00e5ff', fontSize: '13px' }}>{panelStats.lastUpdate}</span>
+                <span style={styles.metricVal} style={{ ...styles.metricVal, color: 'var(--cyan)', fontSize: '13px' }}>{panelStats.lastUpdate}</span>
               </div>
             </div>
 
             {/* Small Pie Chart */}
-            <div style={{ marginTop: '20px', borderTop: '1px solid #1e2d3d', paddingTop: '16px' }}>
+            <div style={{ marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
               <div style={styles.pieTitle}>CRIME PROFILE RATIOS</div>
               <div style={{ height: '140px', width: '100%', position: 'relative' }}>
                 {feedItems.length === 0 ? (
@@ -331,7 +331,7 @@ function LiveIntelFeed() {
                           <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
                         ))}
                       </Pie>
-                      <Tooltip contentStyle={{ background: '#0d1117', border: '1px solid #1e2d3d', fontSize: 10 }} />
+                      <Tooltip contentStyle={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', fontSize: 10 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -356,8 +356,8 @@ const styles = {
     gap: '20px',
   },
   feedPanel: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     display: 'flex',
     flexDirection: 'column',
     height: '600px',
@@ -380,7 +380,7 @@ const styles = {
   },
   feedCard: {
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '12px 16px',
     display: 'flex',
     flexDirection: 'column',
@@ -428,8 +428,8 @@ const styles = {
     gap: '20px',
   },
   sideStatsCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
   },
   metricsGrid: {
     display: 'grid',
@@ -438,7 +438,7 @@ const styles = {
   },
   metricItem: {
     background: '#070a12',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '10px',
     display: 'flex',
     flexDirection: 'column',
@@ -483,9 +483,9 @@ const styles = {
     position: 'fixed',
     bottom: '24px',
     right: '24px',
-    backgroundColor: '#0d1117',
-    border: '1px solid #00ff88',
-    borderLeft: '4px solid #00ff88',
+    backgroundColor: 'var(--bg-panel)',
+    border: '1px solid var(--green)',
+    borderLeft: '4px solid var(--green)',
     color: '#ffffff',
     padding: '12px 20px',
     fontFamily: 'sans-serif',

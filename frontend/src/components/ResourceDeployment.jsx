@@ -113,8 +113,8 @@ function ResourceDeployment() {
       });
 
       const popupContent = `
-        <div style="font-family: monospace; font-size: 11px; color: #ffffff; background-color: #0d1117; padding: 12px; border: 1px solid #1e2d3d;">
-          <h4 style="margin: 0 0 6px 0; color: #00e5ff; font-size: 13px; text-transform: uppercase;">${dist.district}</h4>
+        <div style="font-family: monospace; font-size: 11px; color: #ffffff; background-color: var(--bg-panel); padding: 12px; border: 1px solid var(--border);">
+          <h4 style="margin: 0 0 6px 0; color: var(--cyan); font-size: 13px; text-transform: uppercase;">${dist.district}</h4>
           <div style="margin-bottom: 4px;"><b>OFFICERS DEPLOYED:</b> ${officers}</div>
           <div style="margin-bottom: 4px;"><b>PATROL UNITS:</b> ${dist.patrol_units}</div>
           <div style="margin-bottom: 4px;"><b>ACTIVE CASES:</b> ${dist.active_cases}</div>
@@ -193,7 +193,7 @@ function ResourceDeployment() {
     return (
       <div style={styles.centeredState}>
         <div style={styles.loader}></div>
-        <div style={{ color: '#00e5ff', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>
+        <div style={{ color: 'var(--cyan)', fontFamily: 'monospace', fontSize: '11px', marginTop: '12px' }}>
           FETCHING INTELLIGENCE DATA...
         </div>
       </div>
@@ -214,12 +214,12 @@ function ResourceDeployment() {
 
   const getStatusBadgeStyles = (status) => {
     if (status === "OVERLOADED" || status === "UNDERSTAFFED") {
-      return { backgroundColor: 'rgba(255, 45, 85, 0.1)', color: '#ff2d55', borderColor: 'rgba(255, 45, 85, 0.2)' };
+      return { backgroundColor: 'var(--red-bg)', color: 'var(--red)', borderColor: 'rgba(255, 45, 85, 0.2)' };
     }
     if (status === "BALANCED" || status === "ADEQUATE") {
-      return { backgroundColor: 'rgba(255, 170, 0, 0.1)', color: '#ffaa00', borderColor: 'rgba(255, 170, 0, 0.2)' };
+      return { backgroundColor: 'var(--amber-bg)', color: 'var(--amber)', borderColor: 'rgba(255, 170, 0, 0.2)' };
     }
-    return { backgroundColor: 'rgba(0, 255, 136, 0.1)', color: '#00ff88', borderColor: 'rgba(0, 255, 136, 0.2)' };
+    return { backgroundColor: 'var(--green-bg)', color: 'var(--green)', borderColor: 'rgba(0, 255, 136, 0.2)' };
   };
 
   return (
@@ -241,7 +241,7 @@ function ResourceDeployment() {
         </div>
         <div className="stat-card" style={styles.statCard}>
           <div className="stat-label">UNITS DEPLOYED</div>
-          <div className="stat-value" style={{ color: '#00e5ff' }}>{stats.total_units.toLocaleString()}</div>
+          <div className="stat-value" style={{ color: 'var(--cyan)' }}>{stats.total_units.toLocaleString()}</div>
           <div className="stat-subtitle">Patrol, Spec, & Investigation</div>
         </div>
         <div className="stat-card" style={styles.statCard}>
@@ -251,7 +251,7 @@ function ResourceDeployment() {
         </div>
         <div className="stat-card" style={styles.statCard}>
           <div className="stat-label">AVG RESPONSE TIME</div>
-          <div className="stat-value" style={{ color: '#ffaa00' }}>{stats.avg_response_time} min</div>
+          <div className="stat-value" style={{ color: 'var(--amber)' }}>{stats.avg_response_time} min</div>
           <div className="stat-subtitle">Emergency dispatch logs</div>
         </div>
       </div>
@@ -262,21 +262,21 @@ function ResourceDeployment() {
         <div className="chart-card" style={styles.mapPanel}>
           <div className="chart-header">
             <span className="chart-title">GEOSPATIAL OFFICER DEPLOYMENT GRID</span>
-            <span style={{ fontSize: '10px', color: '#00e5ff', fontFamily: 'monospace' }}>● MAP INTERACTIVE</span>
+            <span style={{ fontSize: '10px', color: 'var(--cyan)', fontFamily: 'monospace' }}>● MAP INTERACTIVE</span>
           </div>
           <div style={styles.mapWrapper}>
             <div ref={mapContainerRef} style={styles.mapCanvas} />
             <div style={styles.hudOverlay}>
               <div style={styles.hudItem}>
-                <span style={{ backgroundColor: '#ff2d55', ...styles.hudDot }}></span>
+                <span style={{ backgroundColor: 'var(--red)', ...styles.hudDot }}></span>
                 <span>&lt; 10 Deployed (Understaffed)</span>
               </div>
               <div style={styles.hudItem}>
-                <span style={{ backgroundColor: '#ffaa00', ...styles.hudDot }}></span>
+                <span style={{ backgroundColor: 'var(--amber)', ...styles.hudDot }}></span>
                 <span>10-25 Deployed (Adequate)</span>
               </div>
               <div style={styles.hudItem}>
-                <span style={{ backgroundColor: '#00ff88', ...styles.hudDot }}></span>
+                <span style={{ backgroundColor: 'var(--green)', ...styles.hudDot }}></span>
                 <span>25+ Deployed (Well Staffed)</span>
               </div>
             </div>
@@ -285,8 +285,8 @@ function ResourceDeployment() {
 
         {/* AI RESOURCE RECOMMENDATIONS PANEL */}
         <div className="chart-card" style={styles.aiPanel}>
-          <div className="chart-header" style={{ borderBottom: '1px solid #1e2d3d' }}>
-            <span className="chart-title" style={{ color: '#ffaa00' }}>AI RESOURCE RECOMMENDATIONS</span>
+          <div className="chart-header" style={{ borderBottom: '1px solid var(--border)' }}>
+            <span className="chart-title" style={{ color: 'var(--amber)' }}>AI RESOURCE RECOMMENDATIONS</span>
           </div>
 
           <div style={styles.aiBody}>
@@ -296,13 +296,13 @@ function ResourceDeployment() {
               suggestions.map((s, idx) => (
                 <div key={idx} style={styles.suggestionCard}>
                   <div style={styles.sHeader}>
-                    <AlertTriangle size={14} color="#ff2d55" />
+                    <AlertTriangle size={14} color="var(--red)" />
                     <span>⚠ REALLOCATION SUGGESTED</span>
                   </div>
                   <div style={styles.sDistrict}>{s.district}</div>
                   <div style={styles.sMeta}>
                     <div>Current: <strong>{s.current_officers}</strong></div>
-                    <div>Recommended: <strong style={{ color: '#00ff88' }}>{s.recommended_officers}</strong></div>
+                    <div>Recommended: <strong style={{ color: 'var(--green)' }}>{s.recommended_officers}</strong></div>
                   </div>
                   <p style={styles.sReason}>{s.reason}</p>
                   <div style={styles.sActions}>
@@ -364,7 +364,7 @@ function ResourceDeployment() {
                   <td className="mono">{dist.officers_deployed}</td>
                   <td className="mono">{dist.patrol_units}</td>
                   <td className="mono">{dist.investigation_units}</td>
-                  <td className="mono" style={{ color: '#00e5ff', fontWeight: 'bold' }}>{dist.cases_per_officer}</td>
+                  <td className="mono" style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>{dist.cases_per_officer}</td>
                   <td>
                     <span 
                       className="badge" 
@@ -391,8 +391,8 @@ const styles = {
     gap: '20px',
   },
   statCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
   },
   mapGrid: {
     display: 'grid',
@@ -400,15 +400,15 @@ const styles = {
     gap: '20px',
   },
   mapPanel: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     display: 'flex',
     flexDirection: 'column',
   },
   mapWrapper: {
     height: '420px',
     position: 'relative',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
   },
   mapCanvas: {
     width: '100%',
@@ -419,7 +419,7 @@ const styles = {
     top: '12px',
     left: '12px',
     background: 'rgba(7, 10, 18, 0.95)',
-    border: '1px solid #1e2d3d',
+    border: '1px solid var(--border)',
     padding: '8px 12px',
     display: 'flex',
     flexDirection: 'column',
@@ -441,8 +441,8 @@ const styles = {
     display: 'inline-block',
   },
   aiPanel: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     display: 'flex',
     flexDirection: 'column',
   },
@@ -463,8 +463,8 @@ const styles = {
   },
   suggestionCard: {
     background: '#070a12',
-    border: '1px solid #1e2d3d',
-    borderLeft: '3px solid #ff2d55',
+    border: '1px solid var(--border)',
+    borderLeft: '3px solid var(--red)',
     padding: '12px',
   },
   sHeader: {
@@ -473,7 +473,7 @@ const styles = {
     gap: '6px',
     fontSize: '9px',
     fontFamily: 'monospace',
-    color: '#ff2d55',
+    color: 'var(--red)',
     fontWeight: 'bold',
   },
   sDistrict: {
@@ -500,8 +500,8 @@ const styles = {
     gap: '8px',
   },
   tableCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
   },
   centeredState: {
     display: 'flex',
@@ -514,8 +514,8 @@ const styles = {
   loader: {
     width: '30px',
     height: '30px',
-    border: '2px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    border: '2px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     animation: 'spin 1s linear infinite',
   },
   errorContainer: {
@@ -533,9 +533,9 @@ const styles = {
     position: 'fixed',
     bottom: '24px',
     right: '24px',
-    backgroundColor: '#0d1117',
-    border: '1px solid #00ff88',
-    borderLeft: '4px solid #00ff88',
+    backgroundColor: 'var(--bg-panel)',
+    border: '1px solid var(--green)',
+    borderLeft: '4px solid var(--green)',
     color: '#ffffff',
     padding: '12px 20px',
     fontFamily: 'sans-serif',

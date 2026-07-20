@@ -24,6 +24,7 @@ import VictimRegistry from './VictimRegistry';
 import EvidenceLocker from './EvidenceLocker';
 
 import OverviewOfficial from './OverviewOfficial';
+import ErrorBoundary from './ErrorBoundary';
 
 import { 
   LayoutDashboard, 
@@ -157,19 +158,31 @@ function Dashboard({
             case 'briefing':
               return <CrimeBriefing />;
             case 'missing':
-              return <MissingPersons />;
+              return (
+                <ErrorBoundary>
+                  <MissingPersons />
+                </ErrorBoundary>
+              );
             case 'live':
               return <LiveIntelFeed />;
             case 'district-stats':
-              return <DistrictStats onNavigateToCase={(caseId) => {
-                setSearchCaseId(caseId);
-                setActiveTab('case-tracker');
-              }} />;
+              return (
+                <ErrorBoundary>
+                  <DistrictStats onNavigateToCase={(caseId) => {
+                    setSearchCaseId(caseId);
+                    setActiveTab('case-tracker');
+                  }} />
+                </ErrorBoundary>
+              );
             case 'crime-calendar':
-              return <CrimeCalendar onNavigateToCase={(caseId) => {
-                setSearchCaseId(caseId);
-                setActiveTab('case-tracker');
-              }} />;
+              return (
+                <ErrorBoundary>
+                  <CrimeCalendar onNavigateToCase={(caseId) => {
+                    setSearchCaseId(caseId);
+                    setActiveTab('case-tracker');
+                  }} />
+                </ErrorBoundary>
+              );
             case 'case-tracker':
               return <CaseTracker initialSearchId={searchCaseId} clearInitialSearchId={() => setSearchCaseId("")} />;
             case 'resource-deployment':
@@ -283,7 +296,7 @@ function Dashboard({
       >
         {/* LOGO SECTION */}
         <div style={styles.sidebarLogoBox}>
-          <Shield size={20} color="#00e5ff" style={{ flexShrink: 0 }} />
+          <Shield size={20} color="var(--cyan)" style={{ flexShrink: 0 }} />
           {!isSidebarCollapsed && <span style={styles.logoText}>KSP INTEL</span>}
         </div>
 
@@ -336,11 +349,11 @@ function Dashboard({
                     >
                       <Icon 
                         size={14} 
-                        color={isActive ? 'var(--cyan)' : 'rgba(255,255,255,0.4)'} 
+                        color={isActive ? 'var(--cyan)' : 'var(--text-label)'} 
                         style={{ flexShrink: 0 }}
                       />
                       {!isSidebarCollapsed && (
-                        <span style={{ color: isActive ? 'var(--cyan)' : 'rgba(255,255,255,0.55)', fontSize: '12px', letterSpacing: '0.5px' }}>
+                        <span style={{ color: isActive ? 'var(--cyan)' : 'var(--text-secondary)', fontSize: '12px', letterSpacing: '0.5px' }}>
                           {item.label}
                         </span>
                       )}
@@ -433,7 +446,7 @@ function Dashboard({
               {isMuted ? (
                 <BellOff size={16} color="var(--red)" />
               ) : (
-                <Bell size={16} color="rgba(255,255,255,0.4)" />
+                <Bell size={16} color="var(--text-label)" />
               )}
             </button>
 
@@ -595,7 +608,7 @@ const styles = {
     padding: '16px 20px 6px',
     fontSize: '9px',
     letterSpacing: '2px',
-    color: 'rgba(255,255,255,0.3)',
+    color: 'var(--text-dim)',
     textTransform: 'uppercase',
     fontWeight: '600'
   },
@@ -611,7 +624,7 @@ const styles = {
   navItemActive: {
     background: 'var(--cyan-dim)',
     borderLeft: '2px solid var(--cyan)',
-    boxShadow: 'inset 3px 0 8px rgba(0,229,255,0.15)'
+    boxShadow: 'inset 3px 0 8px var(--cyan-bg)'
   },
   sidebarFooter: {
     marginTop: 'auto',
@@ -621,14 +634,14 @@ const styles = {
   },
   syncLabel: {
     fontSize: '9px',
-    color: 'rgba(255,255,255,0.3)',
+    color: 'var(--text-dim)',
     letterSpacing: '0.5px',
     marginBottom: '6px'
   },
   progressBarBg: {
     width: '100%',
     height: '3px',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'var(--border-subtle)',
     borderRadius: '1px',
     overflow: 'hidden',
     marginBottom: '4px'
@@ -701,12 +714,12 @@ const styles = {
     color: '#ffffff'
   },
   breadcrumbDivider: {
-    color: 'rgba(255,255,255,0.2)',
+    color: 'var(--text-dim)',
     fontSize: '12px'
   },
   breadcrumbSectionName: {
     fontSize: '12px',
-    color: 'rgba(255,255,255,0.4)',
+    color: 'var(--text-label)',
     fontFamily: 'var(--font-mono)'
   },
   classificationBadge: {
@@ -756,7 +769,7 @@ const styles = {
   headerClock: {
     fontSize: '12px',
     fontFamily: 'var(--font-mono)',
-    color: 'rgba(255,255,255,0.6)'
+    color: 'var(--text-secondary)'
   },
   headerAvatar: {
     width: '32px',
@@ -807,7 +820,7 @@ const styles = {
   },
   dropdownUserBadge: {
     fontSize: '10px',
-    color: 'rgba(255,255,255,0.4)',
+    color: 'var(--text-label)',
     fontFamily: 'var(--font-mono)'
   },
   dropdownUserRole: {
@@ -819,7 +832,7 @@ const styles = {
   },
   dropdownDivider: {
     height: '1px',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'var(--border-subtle)',
     margin: '4px 0'
   },
   dropdownLogoutBtn: {

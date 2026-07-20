@@ -7,11 +7,11 @@ import {
 } from 'lucide-react';
 
 const CRIME_COLORS = {
-  "UPI Fraud": "#00e5ff",
+  "UPI Fraud": "var(--cyan)",
   "Phishing": "#ff9500",
   "Sextortion": "#ffcc00",
   "OLX Scam": "#ff3b30",
-  "Romance Scam": "#bf5af2"
+  "Romance Scam": "var(--purple)"
 };
 
 function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
@@ -176,7 +176,7 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
         </div>
         <div className="stat-card" style={styles.statCard}>
           <span style={styles.statLabel}>PENDING TRIALS</span>
-          <span style={{ ...styles.statValue, color: '#ffaa00' }}>{pendingTrials.toLocaleString()}</span>
+          <span style={{ ...styles.statValue, color: 'var(--amber)' }}>{pendingTrials.toLocaleString()}</span>
           <span style={styles.statSubtitle}>Active in judicial special courts</span>
         </div>
         <div className="stat-card" style={styles.statCard}>
@@ -186,7 +186,7 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
         </div>
         <div className="stat-card" style={styles.statCard}>
           <span style={styles.statLabel}>ACTIVE EMERGING THREATS</span>
-          <span style={{ ...styles.statValue, color: '#bf5af2' }}>3</span>
+          <span style={{ ...styles.statValue, color: 'var(--purple)' }}>3</span>
           <span style={styles.statSubtitle}>Telegram job scam spikes</span>
         </div>
         <div className="stat-card" style={styles.statCard}>
@@ -222,8 +222,8 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
                 const isHigh = d.riskScore > 40 && d.riskScore <= 60;
                 let rowBg = 'transparent';
                 let textColor = '#ffffff';
-                if (isCrit) { rowBg = 'rgba(255, 45, 85, 0.05)'; textColor = '#ff2d55'; }
-                else if (isHigh) { rowBg = 'rgba(255, 170, 0, 0.03)'; textColor = '#ffaa00'; }
+                if (isCrit) { rowBg = 'rgba(255, 45, 85, 0.05)'; textColor = 'var(--red)'; }
+                else if (isHigh) { rowBg = 'rgba(255, 170, 0, 0.03)'; textColor = 'var(--amber)'; }
 
                 return (
                   <tr key={d.name} style={{ backgroundColor: rowBg }}>
@@ -235,8 +235,8 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
                     <td style={{ textAlign: 'center', fontFamily: 'monospace' }}>{d.trend}</td>
                     <td style={{ textAlign: 'center' }}>
                       <span className="badge" style={{
-                        backgroundColor: isCrit ? 'rgba(255, 45, 85, 0.15)' : isHigh ? 'rgba(255, 170, 0, 0.15)' : 'rgba(0, 255, 136, 0.15)',
-                        color: isCrit ? '#ff2d55' : isHigh ? '#ffaa00' : '#00ff88'
+                        backgroundColor: isCrit ? 'var(--red-bg)' : isHigh ? 'var(--amber-bg)' : 'var(--green-bg)',
+                        color: isCrit ? 'var(--red)' : isHigh ? 'var(--amber)' : 'var(--green)'
                       }}>
                         {d.status.toUpperCase()}
                       </span>
@@ -257,10 +257,10 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
         <div style={{ height: '320px' }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={stateTrend} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
-              <CartesianGrid stroke="#1e2d3d" strokeDasharray="3 3" />
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
               <XAxis dataKey="name" stroke="#8a9ba8" style={{ fontFamily: 'monospace', fontSize: '9px' }} />
               <YAxis stroke="#8a9ba8" style={{ fontFamily: 'monospace', fontSize: '9px' }} />
-              <Tooltip contentStyle={{ backgroundColor: '#0d1117', border: '1px solid #1e2d3d', fontSize: 11 }} />
+              <Tooltip contentStyle={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border)', fontSize: 11 }} />
               <Legend wrapperStyle={{ fontSize: 10 }} />
               {Object.entries(CRIME_COLORS).map(([crime, color]) => (
                 <Line 
@@ -281,7 +281,7 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
       {/* SECTION 4 — SCRB ESCALATIONS INBOX */}
       <div className="chart-card" style={styles.sectionCard}>
         <div className="chart-header">
-          <span className="chart-title" style={{ color: '#ff2d55' }}>STATE CRIME RECORD BOARD (SCRB) ESCALATIONS INBOX</span>
+          <span className="chart-title" style={{ color: 'var(--red)' }}>STATE CRIME RECORD BOARD (SCRB) ESCALATIONS INBOX</span>
         </div>
         {scrbEscalations.length === 0 ? (
           <div style={styles.emptyInbox}>NO ESCALATED INCIDENTS AWAITING REVIEW.</div>
@@ -301,8 +301,8 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
               <tbody>
                 {scrbEscalations.map(esc => (
                   <tr key={esc.id}>
-                    <td className="mono" style={{ color: '#FFD700', fontWeight: 'bold' }}>{esc.scrbRef}</td>
-                    <td className="mono" style={{ color: '#00e5ff' }}>{esc.id}</td>
+                    <td className="mono" style={{ color: 'var(--gold)', fontWeight: 'bold' }}>{esc.scrbRef}</td>
+                    <td className="mono" style={{ color: 'var(--cyan)' }}>{esc.id}</td>
                     <td>{esc.victim_district || esc.district}</td>
                     <td>{esc.crime_type}</td>
                     <td className="mono">{esc.escalatedAt}</td>
@@ -311,7 +311,7 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
                         <button className="cyber-btn" onClick={() => setSelectedCase(esc)} style={{ padding: '3px 8px', fontSize: '9px' }}>
                           REVIEW
                         </button>
-                        <button className="cyber-btn-outline" onClick={() => handleCloseEscalation(esc.id, esc.scrbRef)} style={{ padding: '3px 8px', fontSize: '9px', borderColor: '#ff2d55', color: '#ff2d55' }}>
+                        <button className="cyber-btn-outline" onClick={() => handleCloseEscalation(esc.id, esc.scrbRef)} style={{ padding: '3px 8px', fontSize: '9px', borderColor: 'var(--red)', color: 'var(--red)' }}>
                           CLOSE
                         </button>
                       </div>
@@ -326,9 +326,9 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
 
       {/* SECTION 5 — AI INTELLIGENCE SUMMARY */}
       <div style={styles.intelGrid}>
-        <div className="chart-card" style={{ borderLeft: '3px solid #ff2d55', padding: '16px' }}>
+        <div className="chart-card" style={{ borderLeft: '3px solid var(--red)', padding: '16px' }}>
           <div style={styles.intelHeader}>
-            <AlertTriangle size={14} color="#ff2d55" />
+            <AlertTriangle size={14} color="var(--red)" />
             <span style={{ fontWeight: 'bold', fontSize: '11px', color: '#fff' }}>STATE RISK ASSESSMENT</span>
           </div>
           <p style={styles.intelText}>
@@ -336,9 +336,9 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
           </p>
         </div>
 
-        <div className="chart-card" style={{ borderLeft: '3px solid #00e5ff', padding: '16px' }}>
+        <div className="chart-card" style={{ borderLeft: '3px solid var(--cyan)', padding: '16px' }}>
           <div style={styles.intelHeader}>
-            <TrendingUp size={14} color="#00e5ff" />
+            <TrendingUp size={14} color="var(--cyan)" />
             <span style={{ fontWeight: 'bold', fontSize: '11px', color: '#fff' }}>TOP EMERGING THREATS</span>
           </div>
           <ul style={{ ...styles.intelText, paddingLeft: '16px', margin: '8px 0 0' }}>
@@ -348,9 +348,9 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
           </ul>
         </div>
 
-        <div className="chart-card" style={{ borderLeft: '3px solid #FFD700', padding: '16px' }}>
+        <div className="chart-card" style={{ borderLeft: '3px solid var(--gold)', padding: '16px' }}>
           <div style={styles.intelHeader}>
-            <BookOpen size={14} color="#FFD700" />
+            <BookOpen size={14} color="var(--gold)" />
             <span style={{ fontWeight: 'bold', fontSize: '11px', color: '#fff' }}>RECOMMENDED POLICY ACTIONS</span>
           </div>
           <p style={styles.intelText}>
@@ -363,8 +363,8 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
       {selectedCase && (
         <div style={styles.modalOverlay}>
           <div className="chart-card" style={styles.modalContainer}>
-            <div className="chart-header" style={{ borderBottom: '1px solid #1e2d3d', paddingBottom: '10px' }}>
-              <span className="chart-title" style={{ color: '#00e5ff' }}>EXECUTIVE CASE STUDY — {selectedCase.id}</span>
+            <div className="chart-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+              <span className="chart-title" style={{ color: 'var(--cyan)' }}>EXECUTIVE CASE STUDY — {selectedCase.id}</span>
               <button className="cyber-btn-outline" onClick={() => setSelectedCase(null)} style={{ padding: '3px 8px', fontSize: '9px' }}>
                 CLOSE
               </button>
@@ -388,7 +388,7 @@ function OverviewOfficial({ scrbEscalations, removeScrbEscalation }) {
                 <div style={styles.modalCol}>
                   <div style={styles.infoGroup}>
                     <span style={styles.infoLabel}>ANOMALY THREAT REASON</span>
-                    <span style={{ ...styles.infoValue, color: '#ff2d55' }}>{selectedCase.reason || "Suspicious transaction frequency matching prior suspect's MO."}</span>
+                    <span style={{ ...styles.infoValue, color: 'var(--red)' }}>{selectedCase.reason || "Suspicious transaction frequency matching prior suspect's MO."}</span>
                   </div>
                   <div style={styles.infoGroup}>
                     <span style={styles.infoLabel}>INCIDENT DATE</span>
@@ -421,8 +421,8 @@ const styles = {
     gap: '16px'
   },
   statCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '16px',
     display: 'flex',
     flexDirection: 'column',
@@ -445,8 +445,8 @@ const styles = {
     color: '#4f616d'
   },
   sectionCard: {
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
     padding: '20px'
   },
   emptyInbox: {
@@ -484,9 +484,9 @@ const styles = {
   },
   modalContainer: {
     width: '540px',
-    background: '#0d1117',
-    border: '1px solid #1e2d3d',
-    borderTop: '2px solid #00e5ff',
+    background: 'var(--bg-panel)',
+    border: '1px solid var(--border)',
+    borderTop: '2px solid var(--cyan)',
     padding: '20px'
   },
   modalBody: {
@@ -529,12 +529,12 @@ const styles = {
   loader: {
     width: '30px',
     height: '30px',
-    border: '2px solid #1e2d3d',
-    borderTop: '2px solid #FFD700',
+    border: '2px solid var(--border)',
+    borderTop: '2px solid var(--gold)',
     animation: 'spin 1s linear infinite'
   },
   loadingText: {
-    color: '#FFD700',
+    color: 'var(--gold)',
     fontFamily: 'monospace',
     fontSize: '11px',
     marginTop: '12px'
@@ -543,9 +543,9 @@ const styles = {
     position: 'fixed',
     bottom: '24px',
     right: '24px',
-    backgroundColor: '#0d1117',
-    border: '1px solid #00ff88',
-    borderLeft: '4px solid #00ff88',
+    backgroundColor: 'var(--bg-panel)',
+    border: '1px solid var(--green)',
+    borderLeft: '4px solid var(--green)',
     color: '#ffffff',
     padding: '12px 20px',
     fontFamily: 'sans-serif',

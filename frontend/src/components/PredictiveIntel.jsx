@@ -89,10 +89,10 @@ function PredictiveIntel() {
   }, []);
 
   const getRiskColor = (score) => {
-    if (score >= 86) return '#ff2d55'; // Red
+    if (score >= 86) return 'var(--red)'; // Red
     if (score >= 61) return '#ff6b35'; // Orange
-    if (score >= 31) return '#ffaa00'; // Amber
-    return '#00ff88'; // Green
+    if (score >= 31) return 'var(--amber)'; // Amber
+    return 'var(--green)'; // Green
   };
 
   // Initialize Map
@@ -209,7 +209,7 @@ function PredictiveIntel() {
         <div className="chart-card" style={styles.mapCard}>
           <div className="chart-header">
             <span className="chart-title">PREDICTIVE RISK SCORE GRID (0 - 100)</span>
-            <span style={{ fontSize: '10px', color: '#ff2d55', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '10px', color: 'var(--red)', fontFamily: 'monospace' }}>
               ● RF FORECAST RESOLVED
             </span>
           </div>
@@ -232,7 +232,7 @@ function PredictiveIntel() {
                 <CartesianGrid stroke="#1a2a3a" strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="district" 
-                  stroke="#00e5ff" 
+                  stroke="var(--cyan)" 
                   style={{ fontFamily: 'monospace', fontSize: '7px' }}
                   interval={0}
                   angle={-45}
@@ -240,7 +240,7 @@ function PredictiveIntel() {
                   height={50}
                 />
                 <YAxis 
-                  stroke="#00e5ff" 
+                  stroke="var(--cyan)" 
                   style={{ fontFamily: 'monospace', fontSize: '9px' }}
                 />
                 <Tooltip
@@ -251,7 +251,7 @@ function PredictiveIntel() {
                     fontSize: '11px',
                     borderRadius: 0
                   }}
-                  itemStyle={{ color: '#00e5ff' }}
+                  itemStyle={{ color: 'var(--cyan)' }}
                 />
                 <Bar dataKey="risk_score" name="Risk Score">
                   {riskScores.map((entry, index) => (
@@ -269,7 +269,7 @@ function PredictiveIntel() {
         <div className="chart-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div className="chart-header">
             <span className="chart-title">EMERGING SPIKE THREAT ALERTS</span>
-            <span style={{ fontSize: '10px', color: '#ff2d55', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--red)', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <AlertTriangle size={12} /> SPARK DETECTED
             </span>
           </div>
@@ -284,7 +284,7 @@ function PredictiveIntel() {
               trends.map((t, idx) => (
                 <div key={idx} style={styles.alertCard}>
                   <div style={styles.alertHeader}>
-                    <AlertTriangle size={14} color="#ff2d55" />
+                    <AlertTriangle size={14} color="var(--red)" />
                     <span>EMERGING THREAT METRICS</span>
                   </div>
                   <div style={styles.alertDistrict}>
@@ -314,7 +314,7 @@ function PredictiveIntel() {
                     </button>
                     <button 
                       className="cyber-btn" 
-                      style={{ ...styles.alertBtn, backgroundColor: '#ff2d55', color: '#0a0d14', border: '1px solid #ff2d55' }}
+                      style={{ ...styles.alertBtn, backgroundColor: 'var(--red)', color: '#0a0d14', border: '1px solid var(--red)' }}
                       onClick={() => dispatchUnit(t.district, t.crime_type)}
                     >
                       ASSIGN UNIT
@@ -342,7 +342,7 @@ const styles = {
     width: '40px',
     height: '40px',
     border: '2px solid #1a2a3a',
-    borderTop: '2px solid #00e5ff',
+    borderTop: '2px solid var(--cyan)',
     marginBottom: '20px',
   },
   loadingText: {
@@ -420,7 +420,7 @@ const styles = {
     fontSize: '11px',
   },
   alertCard: {
-    borderLeft: '4px solid #ff2d55',
+    borderLeft: '4px solid var(--red)',
     backgroundColor: '#1a0a0a',
     padding: '16px',
     display: 'flex',
@@ -432,7 +432,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     fontSize: '9px',
-    color: '#ff2d55',
+    color: 'var(--red)',
     fontFamily: 'monospace',
     fontWeight: 'bold',
   },
@@ -443,7 +443,7 @@ const styles = {
   },
   alertRate: {
     fontSize: '12px',
-    color: '#ff2d55',
+    color: 'var(--red)',
     fontFamily: 'monospace',
   },
   alertActions: {
