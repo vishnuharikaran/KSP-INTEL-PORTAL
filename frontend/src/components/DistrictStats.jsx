@@ -30,6 +30,7 @@ function DistrictStats() {
   const [passwordError, setPasswordError] = useState("");
   const [greenFlash, setGreenFlash] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
+  const [shakeInput, setShakeInput] = useState(false);
 
   // Suspect Dossier Modal State
   const [selectedOffenderId, setSelectedOffenderId] = useState(null);
@@ -61,6 +62,18 @@ function DistrictStats() {
     fetchDistrictStats(selectedDistrict);
   }, [selectedDistrict]);
 
+  // Modals Escape Listener
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') {
+        setShowAlertModal(false);
+        setSelectedOffenderId(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const handleDistrictChange = (e) => {
     setSelectedDistrict(e.target.value);
   };
@@ -81,6 +94,8 @@ function DistrictStats() {
       }, 1000);
     } else {
       setPasswordError("INVALID AUTHORIZATION CODE");
+      setShakeInput(true);
+      setTimeout(() => setShakeInput(false), 400);
     }
   };
 
@@ -541,9 +556,31 @@ function DistrictStats() {
             className="chart-card" 
             style={{ 
               ...styles.alertModalContainer,
-              borderTop: greenFlash ? '3px solid #00ff88' : '3px solid #ff2d55' 
+              borderTop: greenFlash ? '3px solid #00ff88' : '3px solid #ff2d55',
+              position: 'relative'
             }}
           >
+            {/* Close button Escape and manual */}
+            <button 
+              onClick={() => setShowAlertModal(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.4)',
+                cursor: 'pointer',
+                fontSize: '16px',
+                outline: 'none'
+              }}
+              title="Close modal (Esc)"
+            >
+              ✕
+            </button>
+
+            <Shield size={32} color={greenFlash ? "#00ff88" : "#ff2d55"} style={{ display: 'block', margin: '0 auto 12px auto' }} />
+            
             <div style={styles.alertHeader}>
               <AlertTriangle size={18} color={greenFlash ? "#00ff88" : "#ff2d55"} />
               <span style={styles.alertTitle}>PRIME TIME INTELLIGENCE ALERT</span>
@@ -589,9 +626,10 @@ function DistrictStats() {
                     setPasswordError("");
                   }}
                   placeholder="ENTER ACCESS AUTH CODE..."
-                  className="cyber-input"
+                  className={`cyber-input ${shakeInput ? 'shake-input' : ''}`}
                   style={{
                     ...styles.alertInput,
+                    fontFamily: 'var(--font-mono)',
                     borderColor: passwordError ? '#ff2d55' : greenFlash ? '#00ff88' : '#1e2d3d'
                   }}
                 />

@@ -1,73 +1,77 @@
 /* KSP Cybercrime Intelligence Portal - Design System */
 
 :root {
-  --bg-primary: #070a12;
-  --bg-secondary: #0d1117;
-  --bg-tertiary: #121822;
-  --accent: #00e5ff;
-  --accent-dim: #008899;
-  --accent-dark: #003c45;
-  --border-color: #1e2d3d;
-  --border: 1px solid var(--border-color);
-  --border-glow: 1px solid var(--accent);
-  
-  --text-primary: #ffffff;
-  --text-secondary: #8a9ba8;
-  --text-muted: #4f616d;
-  
-  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  
-  --critical: #ff3b30;
-  --high: #ff9500;
-  --medium: #ffcc00;
-  --low: #34c759;
+  /* Core backgrounds */
+  --bg-primary:    #020409;
+  --bg-secondary:  #080c14;
+  --bg-panel:      #0d1117;
+  --bg-card:       #111827;
+  --bg-hover:      #161d2b;
 
-  --login-bg: radial-gradient(circle at center, rgba(16, 20, 31, 0.4) 0%, rgba(5, 7, 15, 0.9) 100%);
-  --login-grid: linear-gradient(0deg, transparent 24%, rgba(0, 229, 255, 0.02) 25%, rgba(0, 229, 255, 0.02) 26%, transparent 27%, transparent 74%, rgba(0, 229, 255, 0.02) 75%, rgba(0, 229, 255, 0.02) 76%, transparent 77%, transparent);
-  --login-header-bg: rgba(7, 10, 18, 0.6);
-  --login-card-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  --restricted-bg: rgba(255, 59, 48, 0.02);
-  --restricted-border: 1px solid rgba(255, 59, 48, 0.3);
+  /* Accent colors */
+  --cyan:          #00e5ff;
+  --cyan-dim:      rgba(0, 229, 255, 0.12);
+  --cyan-glow:     0 0 20px rgba(0, 229, 255, 0.2);
+  --red:           #ff2d55;
+  --red-dim:       rgba(255, 45, 85, 0.10);
+  --amber:         #ffaa00;
+  --amber-dim:     rgba(255, 170, 0, 0.10);
+  --green:         #00ff88;
+  --green-dim:     rgba(0, 255, 136, 0.10);
+  --purple:        #bf5af2;
+  --gold:          #FFD700;
+
+  /* Borders */
+  --border:        1px solid #1e2d3d;
+  --border-cyan:   1px solid rgba(0, 229, 255, 0.3);
+  --border-red:    1px solid rgba(255, 45, 85, 0.3);
+  --border-amber:  1px solid rgba(255, 170, 0, 0.3);
+  --border-green:  1px solid rgba(0, 255, 136, 0.25);
+  --border-gold:   1px solid rgba(255, 215, 0, 0.4);
+
+  /* Typography */
+  --font-mono:     'JetBrains Mono', 'Courier New', monospace;
+  --font-ui:       'Inter', 'Segoe UI', sans-serif;
+
+  /* Spacing */
+  --radius-sm:     6px;
+  --radius-md:     10px;
+  --radius-lg:     14px;
+
+  /* Transitions */
+  --transition:    all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Reset and Base Styles */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  /* Disable transitions and animations globally */
-  transition: none !important;
-  animation: none !important;
 }
 
 body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  line-height: 1.5;
-  overflow-x: hidden;
+  background: var(--bg-primary);
+  color: rgba(255, 255, 255, 0.87);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-code, pre, .mono {
-  font-family: var(--font-mono);
-}
-
-/* Scrollbar Customization */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-primary);
-}
+/* Remove ALL default scrollbars, replace with thin cyan */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border: 1px solid var(--bg-primary);
+  background: rgba(0, 229, 255, 0.25);
+  border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent);
+  background: rgba(0, 229, 255, 0.5);
+}
+
+/* Global selection color */
+::selection {
+  background: rgba(0, 229, 255, 0.2);
+  color: white;
 }
 
 /* Utility Layouts */
@@ -741,6 +745,201 @@ code, pre, .mono {
   border-top: var(--border);
   color: var(--text-muted);
   font-family: var(--font-mono);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.cyber-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.cyber-table th {
+  background-color: var(--bg-tertiary);
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1px;
+  border-bottom: var(--border);
+}
+
+.cyber-table td {
+  padding: 14px 16px;
+  border-bottom: var(--border);
+  color: var(--text-primary);
+}
+
+.cyber-table tr:hover td {
+  background-color: var(--bg-tertiary);
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.badge.investigation {
+  background-color: rgba(255, 149, 0, 0.1);
+  color: var(--high);
+  border-color: rgba(255, 149, 0, 0.2);
+}
+
+.badge.fir {
+  background-color: rgba(255, 204, 0, 0.1);
+  color: var(--medium);
+  border-color: rgba(255, 204, 0, 0.2);
+}
+
+.badge.arrested {
+  background-color: rgba(52, 199, 89, 0.1);
+  color: var(--low);
+  border-color: rgba(52, 199, 89, 0.2);
+}
+
+.badge.court {
+  background-color: rgba(0, 229, 255, 0.1);
+  color: var(--accent);
+  border-color: rgba(0, 229, 255, 0.2);
+}
+
+.badge.closed {
+  background-color: rgba(140, 155, 165, 0.1);
+  color: var(--text-secondary);
+  border-color: rgba(140, 155, 165, 0.2);
+}
+
+.badge.priority-critical {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: var(--critical);
+  border-color: rgba(255, 59, 48, 0.2);
+  font-weight: bold;
+}
+
+.badge.priority-high {
+  background-color: rgba(255, 149, 0, 0.1);
+  color: var(--high);
+  border-color: rgba(255, 149, 0, 0.2);
+}
+
+.badge.priority-medium {
+  background-color: rgba(255, 204, 0, 0.1);
+  color: var(--medium);
+  border-color: rgba(255, 204, 0, 0.2);
+}
+
+.badge.priority-low {
+  background-color: rgba(52, 199, 89, 0.1);
+  color: var(--low);
+  border-color: rgba(52, 199, 89, 0.2);
+}
+
+/* Pagination */
+.pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background-color: var(--bg-secondary);
+  border-top: var(--border);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Leaflet Popup Cyber Overrides */
+.cyber-leaflet-popup .leaflet-popup-content-wrapper {
+  background: #10141f !important;
+  color: #ffffff !important;
+  border: 1px solid #1a2a3a !important;
+  border-radius: 0px !important;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.15) !important;
+  padding: 0 !important;
+}
+
+.cyber-leaflet-popup .leaflet-popup-content {
+  margin: 0 !important;
+  line-height: inherit !important;
+}
+
+.cyber-leaflet-popup .leaflet-popup-tip {
+  background: #10141f !important;
+  border-left: 1px solid #1a2a3a !important;
+  border-bottom: 1px solid #1a2a3a !important;
+}
+
+/* Pulsing Green Dot */
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #34c759;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px #34c759;
+  animation: pulse 1.6s infinite !important;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(52, 199, 89, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(52, 199, 89, 0);
+  }
+}
+
+/* Breadcrumb Styles */
+.breadcrumb {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Notification Bar */
+.notification-banner {
+  background-color: rgba(0, 229, 255, 0.02);
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  padding: 12px 24px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Footer Styles */
+.app-footer {
+  text-align: center;
+  padding: 20px;
+  border-top: var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
   font-size: 11px;
   margin-top: 40px;
   background-color: var(--bg-secondary);
@@ -756,4 +955,65 @@ code, pre, .mono {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Page Transition Fade In */
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-fade-in {
+  animation: pageFadeIn 150ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* High Risk Map Marker Pulse */
+@keyframes mapPulse {
+  0%   { transform: scale(1); opacity: 1; }
+  50%  { transform: scale(1.3); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.map-marker-pulse {
+  animation: mapPulse 2s infinite ease-in-out;
+}
+
+/* Password Input Error Shake */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.shake-input {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Live Feed Increment Flash */
+@keyframes countFlash {
+  0%, 100% { color: white; }
+  50%       { color: var(--cyan); }
+}
+
+.count-flash-active {
+  animation: countFlash 0.5s ease;
+}
+
+/* Accessibility Focus Ring */
+button:focus, input:focus, select:focus, textarea:focus, [tabindex]:focus {
+  outline: 2px solid rgba(0, 229, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* Shimmer Loading Skeletons */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #111827 25%, #1a2332 50%, #111827 75%);
+  background-size: 400% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
 }

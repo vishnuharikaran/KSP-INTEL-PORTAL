@@ -1,40 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import { Shield, Eye, EyeOff, Lock, User, Terminal, CheckCircle2, AlertOctagon } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Shield, Eye, EyeOff, Lock, Check } from 'lucide-react';
 
 function Login({ onLogin }) {
-  const [email, setEmail] = useState('SP-Ramesh');
+  const [username, setUsername] = useState('SP-Ramesh');
   const [password, setPassword] = useState('password');
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('higher_official'); // 'field_officer' or 'higher_official'
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // Real-time clock state matching the format in the screenshot
+  // Real-time clock states
   const [timeStr, setTimeStr] = useState('');
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const time = now.toLocaleTimeString('en-US', { hour12: false });
-      const date = now.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      setTimeStr(`${time}  ${date}`);
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
+  
+  // System status and activity logs
   const [dbStats, setDbStats] = useState({
-    totalComplaints: 13230,
-    totalLoss: 2972162462,
-    arrested: 2590,
-    underInvestigation: 2669
+    totalComplaints: 11754,
+    totalLoss: 2638850058,
+    arrested: 2306,
+    underInvestigation: 2376
   });
 
-  const [recentCases, setRecentCases] = useState([
-    { title: 'New FIR logged — Bengaluru Urban', time: '42s ago' },
-    { title: 'UPI fraud cluster flag in Tumakuru', time: '2m 15s ago' },
-    { title: 'Mule account link identified in Mysuru', time: '5m 12s ago' }
-  ]);
+  // Keep track of elapsed seconds for active auto-increment
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    // Ticking clock format: "HH:MM:SS DayName, DD Month YYYY"
+    const updateTime = () => {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      
+      const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      
+      const dayName = weekdays[now.getDay()];
+      const day = now.getDate();
+      const month = months[now.getMonth()];
+      const year = now.getFullYear();
+      
+      setTimeStr(`${hours}:${minutes}:${seconds} ${dayName}, ${day} ${month} ${year}`);
+    };
+    updateTime();
+    const clockInterval = setInterval(updateTime, 1000);
+    return () => clearInterval(clockInterval);
+  }, []);
+
+  useEffect(() => {
+    // Relative counter incrementing every second
+    const timer = setInterval(() => {
+      setElapsedSeconds(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Format elapsed time string helper
+  const formatTimeAgo = (startSecs) => {
+    const totalSecs = startSecs + elapsedSeconds;
+    if (totalSecs < 60) {
+      return `${totalSecs}s ago`;
+    }
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    return `${mins}m ${secs}s ago`;
+  };
 
   useEffect(() => {
     const loadDbStats = async () => {
@@ -43,26 +72,11 @@ function Login({ onLogin }) {
         if (statsRes.ok) {
           const statsData = await statsRes.json();
           setDbStats({
-            totalComplaints: statsData.total_complaints || 13230,
-            totalLoss: statsData.total_loss || 2972162462,
-            arrested: statsData.arrested || 2590,
-            underInvestigation: statsData.under_investigation || 2669
+            totalComplaints: statsData.total_complaints || 11754,
+            totalLoss: statsData.total_loss || 2638850058,
+            arrested: statsData.arrested || 2306,
+            underInvestigation: statsData.under_investigation || 2376
           });
-        }
-        
-        const casesRes = await fetch('http://127.0.0.1:8000/api/complaints?limit=3');
-        if (casesRes.ok) {
-          const casesData = await casesRes.json();
-          const mapped = casesData.map((c, idx) => {
-            const timeDiff = idx === 0 ? "42s ago" : idx === 1 ? "2m 15s ago" : "5m 12s ago";
-            return {
-              title: `${c.crime_type} logged at ${c.victim_district}`,
-              time: timeDiff
-            };
-          });
-          if (mapped.length > 0) {
-            setRecentCases(mapped);
-          }
         }
       } catch (err) {
         console.error("Failed to load KSP DB stats for login screen:", err);
@@ -82,7 +96,7 @@ function Login({ onLogin }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: username, password }),
       });
 
       if (!response.ok) {
@@ -91,8 +105,8 @@ function Login({ onLogin }) {
       }
 
       const data = await response.json();
-      // Route user dynamically based on the returned user_role key
-      onLogin(data.token, data, data.user_role);
+      // Route user dynamically based on the selected toggle role rather than hardcoded DB role if needed, or sync them
+      onLogin(data.token, data, selectedRole);
     } catch (err) {
       setError(err.message || 'Server connection failed.');
     } finally {
@@ -100,426 +114,476 @@ function Login({ onLogin }) {
     }
   };
 
-  const handleDemoClick = (userVal) => {
-    setEmail(userVal);
+  const handleDemoClick = (userVal, roleVal) => {
+    setUsername(userVal);
     setPassword('password');
+    setSelectedRole(roleVal);
   };
 
   return (
-    <div style={styles.loginContainer}>
+    <div style={styles.fullscreenWrapper}>
       {/* Top Header Bar */}
-      <div style={styles.topHeader}>
+      <header style={styles.topHeader}>
         <div style={styles.topHeaderLeft}>
-          <span style={styles.statusDot}></span>
+          <span className="pulse-dot" style={styles.statusDot}></span>
           <span style={styles.statusText}>SECURE CHANNEL ACTIVE</span>
-          <span style={styles.nodeText}>NODE: BNG-01 - KSETP, Bengaluru</span>
+          <span style={styles.separator}>|</span>
+          <span style={styles.nodeText}>NODE: BNG-01 • KSETP, Bengaluru</span>
         </div>
         <div style={styles.topHeaderRight}>
           <span style={styles.clockText}>{timeStr}</span>
         </div>
-      </div>
+      </header>
 
-      <div style={styles.mainLayout}>
-        {/* LEFT COLUMN — SYSTEM STATUS */}
-        <div style={styles.sidePanel}>
-          <div className="chart-card" style={styles.widgetCard}>
+      {/* Main Split Panel Area */}
+      <div style={styles.splitGrid}>
+        {/* Left Column — 50% */}
+        <section style={styles.leftPanel}>
+          <div style={styles.logoGroup}>
+            <Shield size={48} color="#00e5ff" style={{ marginBottom: '16px' }} />
+            <h1 style={styles.mainTitle}>KSP INTEL</h1>
+            <p style={styles.subTitle}>CYBER CRIME PORTAL</p>
+            <div style={styles.accentLine}></div>
+            <p style={styles.italicQuote}>
+              State-Wide Crime Investigation &amp; Syndicate Analysis Platform
+            </p>
+          </div>
+
+          <div style={styles.widgetBox}>
             <div style={styles.widgetHeader}>SYSTEM STATUS</div>
-            <div style={styles.statusList}>
-              <div style={styles.statusItem}>
-                <span>Total Cyber Complaints</span>
-                <span style={{ color: '#00e5ff', fontWeight: 'bold' }}>{dbStats.totalComplaints.toLocaleString()}</span>
+            <div style={styles.statusTable}>
+              <div style={styles.statusRow}>
+                <span style={styles.statusLabel}>Total Cyber Complaints</span>
+                <span style={{ ...styles.statusValue, color: 'var(--cyan)' }}>{dbStats.totalComplaints.toLocaleString()}</span>
               </div>
-              <div style={styles.statusItem}>
-                <span>Financial Loss (INR)</span>
-                <span style={{ color: '#ff2d55', fontWeight: 'bold' }}>₹{(dbStats.totalLoss / 10000000).toFixed(2)} Cr</span>
+              <div style={styles.statusRow}>
+                <span style={styles.statusLabel}>Financial Loss (INR)</span>
+                <span style={{ ...styles.statusValue, color: 'var(--red)' }}>₹{(dbStats.totalLoss / 10000000).toFixed(2)} Cr</span>
               </div>
-              <div style={styles.statusItem}>
-                <span>Active Investigations</span>
-                <span style={{ color: '#ff9500', fontWeight: 'bold' }}>{dbStats.underInvestigation.toLocaleString()}</span>
+              <div style={styles.statusRow}>
+                <span style={styles.statusLabel}>Active Investigations</span>
+                <span style={{ ...styles.statusValue, color: 'var(--amber)' }}>{dbStats.underInvestigation.toLocaleString()}</span>
               </div>
-              <div style={styles.statusItem}>
-                <span>Resolved Arrests</span>
-                <span style={{ color: '#34c759', fontWeight: 'bold' }}>{dbStats.arrested.toLocaleString()}</span>
+              <div style={styles.statusRow}>
+                <span style={styles.statusLabel}>Resolved Arrests</span>
+                <span style={{ ...styles.statusValue, color: 'var(--green)' }}>{dbStats.arrested.toLocaleString()}</span>
               </div>
-              <div style={styles.statusItem}>
-                <span>CCTNS Node Sync</span>
-                <span style={{ color: '#00e5ff', fontWeight: 'bold' }}>100%</span>
+              <div style={styles.statusRow}>
+                <span style={styles.statusLabel}>CCTNS Node Sync</span>
+                <span style={{ ...styles.statusValue, color: 'var(--green)' }}>100%</span>
               </div>
             </div>
           </div>
 
-          <div className="chart-card" style={styles.widgetCard}>
-            <div style={styles.widgetHeader}>RECENT ACTIVITY</div>
+          <div style={styles.recentActivityBox}>
+            <div style={styles.recentActivityTitle}>RECENT ACTIVITY</div>
             <div style={styles.activityList}>
-              {recentCases.map((item, idx) => (
-                <div key={idx} style={styles.activityItem}>
-                  <span style={styles.activityDot}>●</span>
-                  <div style={styles.activityContent}>
-                    <div style={styles.activityTitle}>{item.title}</div>
-                    <div style={styles.activityTime}>{item.time}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* CENTER COLUMN — AUTHENTICATION CARD */}
-        <div style={styles.centerBlock}>
-          {/* Logo Brand Header */}
-          <div style={styles.logoBlock}>
-            <div style={styles.shieldRing}>
-              <Shield size={32} color="var(--accent)" style={styles.shieldIcon} />
-            </div>
-            <h1 style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '22px', fontWeight: 'bold', color: 'var(--accent)', letterSpacing: '2px', marginBottom: '4px' }}>KSP INTEL</h1>
-            <p style={{ ...styles.drishtiSubtitle, marginTop: '2px' }}>CYBER CRIME PORTAL</p>
-            <p style={styles.drishtiTagline}>State-Wide Cyber Investigation and Syndicate Analysis Platform</p>
-          </div>
-
-          <div style={styles.authCard}>
-            <div style={styles.authCardHeader}>
-              <Lock size={12} color="#00e5ff" />
-              <span>SECURE OFFICER AUTHENTICATION</span>
-            </div>
-
-            {error && (
-              <div style={styles.errorAlert}>
-                <AlertOctagon size={14} style={{ marginRight: '6px' }} />
-                <span>{error}</span>
+              <div style={styles.activityItem}>
+                <span className="pulse-dot" style={{ backgroundColor: 'var(--green)', boxShadow: '0 0 8px var(--green)', marginRight: '10px' }}></span>
+                <span style={styles.activityText}>New FIR logged — Bengaluru Urban</span>
+                <span style={styles.activityTime}>{formatTimeAgo(42)}</span>
               </div>
-            )}
+              <div style={styles.activityItem}>
+                <span className="pulse-dot" style={{ backgroundColor: 'var(--amber)', boxShadow: '0 0 8px var(--amber)', marginRight: '10px' }}></span>
+                <span style={styles.activityText}>UPI fraud cluster flag in Tumkuru</span>
+                <span style={styles.activityTime}>{formatTimeAgo(135)}</span>
+              </div>
+              <div style={styles.activityItem}>
+                <span className="pulse-dot" style={{ backgroundColor: 'var(--red)', boxShadow: '0 0 8px var(--red)', marginRight: '10px' }}></span>
+                <span style={styles.activityText}>Mule account link identified Mysuru</span>
+                <span style={styles.activityTime}>{formatTimeAgo(312)}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Right Column — 50% */}
+        <section style={styles.rightPanel}>
+          {/* Classification Warning Box */}
+          <div style={styles.restrictedWarning}>
+            <span style={styles.restrictedHeader}>CLASSIFICATION</span>
+            <span style={styles.restrictedTextBold}>RESTRICTED</span>
+            <span style={styles.restrictedSubText}>Law Enforcement Use Only</span>
+          </div>
+
+          {/* Login Auth Card */}
+          <div style={styles.loginCard}>
+            <div style={styles.authHeaderGroup}>
+              <Lock size={20} color="#00e5ff" style={{ marginBottom: '8px' }} />
+              <h2 style={styles.authTitle}>SECURE OFFICER AUTHENTICATION</h2>
+            </div>
+
+            {error && <div style={styles.errorAlert}>{error}</div>}
 
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.inputGroup}>
-                <label style={styles.label}>
-                  <User size={10} style={{ marginRight: '4px' }} />
-                  <span>OFFICER ID / USERNAME</span>
-                </label>
+                <label style={styles.inputLabel}>OFFICER ID / USERNAME</label>
                 <input
                   type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={styles.input}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  style={styles.textInput}
                   placeholder="e.g. SP-Ramesh"
                   required
                 />
               </div>
 
               <div style={styles.inputGroup}>
-                <label style={styles.label}>
-                  <Lock size={10} style={{ marginRight: '4px' }} />
-                  <span>ACCESS CODE</span>
-                </label>
+                <label style={styles.inputLabel}>ACCESS CODE</label>
                 <div style={styles.passwordWrapper}>
                   <input
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    style={styles.passwordInput}
-                    placeholder="••••••••••••"
+                    style={styles.textInput}
+                    placeholder="••••••••"
                     required
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={styles.eyeBtn}
+                    onClick={() => setShowPassword(p => !p)}
+                    style={styles.passwordToggle}
                   >
-                    {showPassword ? <EyeOff size={14} color="#8a9ba8" /> : <Eye size={14} color="#8a9ba8" />}
+                    {showPassword ? <EyeOff size={16} color="rgba(255,255,255,0.4)" /> : <Eye size={16} color="rgba(255,255,255,0.4)" />}
                   </button>
                 </div>
               </div>
 
-              <button type="submit" disabled={loading} style={styles.authBtn}>
-                <Lock size={12} style={{ marginRight: '8px' }} />
-                <span>{loading ? 'AUTHENTICATING...' : 'AUTHENTICATE & ENTER SYSTEM'}</span>
+              {/* Login As toggle */}
+              <div style={styles.toggleContainer}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('field_officer')}
+                  style={{
+                    ...styles.toggleBtn,
+                    ...(selectedRole === 'field_officer' ? styles.toggleBtnActive : styles.toggleBtnInactive)
+                  }}
+                >
+                  FIELD OFFICER
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('higher_official')}
+                  style={{
+                    ...styles.toggleBtn,
+                    ...(selectedRole === 'higher_official' ? styles.toggleBtnActive : styles.toggleBtnInactive)
+                  }}
+                >
+                  HIGHER OFFICIAL
+                </button>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                style={styles.submitBtn}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <Lock size={16} color="#000000" />
+                  {loading ? 'AUTHENTICATING...' : 'AUTHENTICATE & ENTER SYSTEM'}
+                </span>
               </button>
             </form>
 
-            {/* Demo Credentials list */}
-            <div style={styles.demoCredentialsBox}>
-              <div style={styles.demoHeader}>
-                <Terminal size={10} style={{ marginRight: '6px' }} />
-                <span>DEMO ACCESS CREDENTIALS</span>
-              </div>
-              <div style={styles.demoList}>
-                {[
-                  { name: 'SP-Ramesh', level: 'LEVEL 3 — TOP SECRET' },
-                  { name: 'DSP-Kumar', level: 'LEVEL 2 — RESTRICTED' },
-                  { name: 'admin', level: 'LEVEL 4 — ADMIN' }
-                ].map(cred => (
-                  <button
-                    key={cred.name}
-                    type="button"
-                    onClick={() => handleDemoClick(cred.name)}
-                    style={styles.demoItemRow}
-                  >
-                    <span style={styles.demoName}>{cred.name}</span>
-                    <span style={styles.demoLevel}>{cred.level}</span>
-                  </button>
-                ))}
-              </div>
+            <div style={styles.dividerGroup}>
+              <span style={styles.dividerText}>DEMO ACCESS CREDENTIALS</span>
             </div>
-          </div>
-        </div>
 
-        {/* RIGHT COLUMN — CAPABILITIES & RESTRICTION */}
-        <div style={styles.sidePanel}>
-          <div style={styles.restrictedBox}>
-            <div style={styles.restrictedHeader}>CLASSIFICATION</div>
-            <div style={styles.restrictedBody}>
-              <span style={styles.restrictedTextBold}>RESTRICTED</span>
-              <span style={styles.restrictedTextSub}>Law Enforcement Use Only</span>
-            </div>
-          </div>
-
-          <div className="chart-card" style={styles.widgetCard}>
-            <div style={styles.widgetHeader}>CAPABILITIES</div>
-            <div style={styles.capabilitiesList}>
-              <div style={styles.capabilityItem}>✦ Real-time Karnataka Crime Map</div>
-              <div style={styles.capabilityItem}>✦ Syndicate & Network Analysis</div>
-              <div style={styles.capabilityItem}>✦ Burner Phone IMEI Path Tracer</div>
-              <div style={styles.capabilityItem}>✦ FIR Assistant & Case Tracker</div>
-              <div style={styles.capabilityItem}>✦ District Crime Calendars</div>
-              <div style={styles.capabilityItem}>✦ Evidence Locker & Integrity Logs</div>
+            {/* Autofill Demo Rows */}
+            <div style={styles.demoRows}>
+              <button
+                type="button"
+                onClick={() => handleDemoClick('SP-Ramesh', 'higher_official')}
+                style={styles.demoRowItem}
+              >
+                <span style={styles.demoUser}>SP-Ramesh</span>
+                <span style={{ ...styles.badge, color: 'var(--red)', borderColor: 'rgba(255,45,85,0.3)', backgroundColor: 'var(--red-dim)' }}>
+                  LEVEL 3 — TOP SECRET
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoClick('DSP-Kumar', 'field_officer')}
+                style={styles.demoRowItem}
+              >
+                <span style={styles.demoUser}>DSP-Kumar</span>
+                <span style={{ ...styles.badge, color: 'var(--amber)', borderColor: 'rgba(255,170,0,0.3)', backgroundColor: 'var(--amber-dim)' }}>
+                  LEVEL 2 — RESTRICTED
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoClick('admin', 'higher_official')}
+                style={styles.demoRowItem}
+              >
+                <span style={styles.demoUser}>admin</span>
+                <span style={{ ...styles.badge, color: 'var(--gold)', borderColor: 'rgba(255,215,0,0.4)', backgroundColor: 'rgba(255,215,0,0.1)' }}>
+                  LEVEL 4 — ADMIN
+                </span>
+              </button>
             </div>
           </div>
 
-          <div style={styles.attributionBox}>
-            <p>
-              This portal is developed under the <strong style={{ color: '#00e5ff' }}>Smart Policing Initiative</strong> in partnership with the Karnataka State Police (KSP) Cyber Crime Wing.
+          {/* Bottom Classified warning labels */}
+          <footer style={styles.classifiedFooter}>
+            <p style={styles.classifiedFooterText}>KARNATAKA STATE POLICE • KSETP • CLASSIFIED SYSTEM</p>
+            <p style={styles.classifiedWarningText}>
+              Unauthorized access is punishable under IT Act 2000/BNS. All sessions are monitored and logged.
             </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer warning */}
-      <div style={styles.footer}>
-        <div style={styles.footerLabel}>KARNATAKA STATE POLICE • KSETP • CLASSIFIED SYSTEM</div>
-        <div style={styles.footerSubText}>
-          Unauthorized access is a punishable offence under IT Act 2000/BNS. All sessions are monitored and logged.
-        </div>
+          </footer>
+        </section>
       </div>
     </div>
   );
 }
 
 const styles = {
-  loginContainer: {
+  fullscreenWrapper: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
     width: '100vw',
     height: '100vh',
-    position: 'relative',
     overflow: 'hidden',
     backgroundColor: 'var(--bg-primary)',
-    // Grid background
-    backgroundImage: 'var(--login-bg), var(--login-grid), var(--login-grid)',
-    backgroundSize: '100% 100%, 45px 45px, 45px 45px',
-    boxSizing: 'border-box'
+    color: '#ffffff'
   },
   topHeader: {
-    position: 'absolute',
-    top: '0',
-    left: '0',
-    width: '100%',
+    height: '36px',
+    backgroundColor: 'var(--bg-secondary)',
+    borderBottom: 'var(--border)',
     display: 'flex',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '16px 32px',
-    borderBottom: '1px solid var(--border-color)',
-    backgroundColor: 'var(--login-header-bg)',
-    zIndex: 100
+    justifyContent: 'space-between',
+    padding: '0 24px',
+    flexShrink: 0
   },
   topHeaderLeft: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px'
+    gap: '8px'
   },
   statusDot: {
     width: '6px',
     height: '6px',
-    borderRadius: '50%',
-    backgroundColor: '#34c759',
-    animation: 'pulse 1.5s infinite'
+    backgroundColor: 'var(--green)',
+    borderRadius: '50%'
   },
   statusText: {
-    fontSize: '9px',
-    fontFamily: "'JetBrains Mono', monospace",
-    color: '#34c759',
-    fontWeight: 'bold',
-    letterSpacing: '1px'
+    fontSize: '10px',
+    color: 'var(--green)',
+    fontWeight: '600',
+    letterSpacing: '1px',
+    fontFamily: 'var(--font-mono)'
+  },
+  separator: {
+    color: 'rgba(255,255,255,0.2)',
+    fontSize: '10px'
   },
   nodeText: {
-    fontSize: '9px',
-    fontFamily: "'JetBrains Mono', monospace",
-    color: 'var(--text-muted)',
-    marginLeft: '15px'
+    fontSize: '10px',
+    color: 'rgba(255,255,255,0.4)',
+    fontFamily: 'var(--font-mono)'
   },
   topHeaderRight: {
     display: 'flex',
-    alignItems: 'center',
-    gap: '20px'
+    alignItems: 'center'
   },
   clockText: {
-    fontSize: '10px',
-    fontFamily: "'JetBrains Mono', monospace",
-    color: 'var(--text-secondary)'
+    fontSize: '12px',
+    fontFamily: 'var(--font-mono)',
+    color: 'rgba(255,255,255,0.85)'
   },
-  themeToggleBtn: {
+  splitGrid: {
     display: 'flex',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-    border: '1px solid var(--accent)',
-    color: 'var(--accent)',
-    padding: '4px 10px',
-    fontSize: '8.5px',
-    fontFamily: "'JetBrains Mono', monospace",
-    cursor: 'pointer',
-    borderRadius: '2px',
-    transition: 'all 0.2s ease'
-  },
-  mainLayout: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flex: 1,
     width: '100%',
-    maxWidth: '1200px',
-    padding: '0 20px',
-    marginTop: '60px',
-    marginBottom: '60px',
-    zIndex: 10
+    height: 'calc(100vh - 36px)',
+    overflow: 'hidden'
   },
-  sidePanel: {
+  leftPanel: {
+    width: '50%',
+    backgroundColor: 'var(--bg-secondary)',
+    borderRight: 'var(--border)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px',
-    width: '270px'
+    justifyContent: 'center',
+    padding: '60px',
+    overflowY: 'auto'
   },
-  widgetCard: {
-    backgroundColor: 'var(--bg-secondary)',
+  logoGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    marginBottom: '36px'
+  },
+  mainTitle: {
+    fontSize: '32px',
+    fontFamily: 'var(--font-mono)',
+    fontWeight: '700',
+    color: '#ffffff',
+    letterSpacing: '6px',
+    margin: '0 0 4px 0'
+  },
+  subTitle: {
+    fontSize: '11px',
+    letterSpacing: '4px',
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '600',
+    margin: 0
+  },
+  accentLine: {
+    width: '60px',
+    height: '1px',
+    backgroundColor: 'var(--cyan)',
+    margin: '24px auto'
+  },
+  italicQuote: {
+    fontSize: '13px',
+    color: 'rgba(255,255,255,0.5)',
+    fontStyle: 'italic',
+    lineHeight: '1.5'
+  },
+  widgetBox: {
+    backgroundColor: 'var(--bg-panel)',
     border: 'var(--border)',
     padding: '16px',
-    borderRadius: '4px'
+    borderRadius: '10px',
+    marginBottom: '24px'
   },
   widgetHeader: {
-    fontSize: '9px',
-    fontFamily: "'JetBrains Mono', monospace",
-    color: 'var(--text-secondary)',
-    borderBottom: '1px solid var(--border-color)',
-    paddingBottom: '8px',
+    fontSize: '10px',
+    color: 'var(--cyan)',
+    fontWeight: '600',
+    letterSpacing: '2px',
     marginBottom: '12px',
-    letterSpacing: '1px'
+    fontFamily: 'var(--font-mono)'
   },
-  statusList: {
+  statusTable: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px'
+    gap: '8px'
   },
-  statusItem: {
+  statusRow: {
     display: 'flex',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: '13px'
+  },
+  statusLabel: {
+    color: 'rgba(255,255,255,0.6)'
+  },
+  statusValue: {
+    fontFamily: 'var(--font-mono)',
+    fontWeight: '600'
+  },
+  recentActivityBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  },
+  recentActivityTitle: {
     fontSize: '10px',
-    fontFamily: 'monospace',
-    color: 'var(--text-secondary)'
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: '1px',
+    fontWeight: '600',
+    marginBottom: '4px'
   },
   activityList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px'
+    gap: '10px'
   },
   activityItem: {
     display: 'flex',
-    alignItems: 'flex-start',
-    gap: '8px'
+    alignItems: 'center',
+    fontSize: '12px',
+    backgroundColor: 'rgba(255,255,255,0.01)',
+    padding: '8px 12px',
+    border: '1px solid rgba(255,255,255,0.03)'
   },
-  activityDot: {
-    color: '#00e5ff',
-    fontSize: '10px',
-    lineHeight: '1'
-  },
-  activityContent: {
-    display: 'flex',
-    flexDirection: 'column'
-  },
-  activityTitle: {
-    fontSize: '10px',
-    color: 'var(--text-primary)',
-    fontWeight: 'bold'
+  activityText: {
+    color: 'rgba(255,255,255,0.7)',
+    flex: 1
   },
   activityTime: {
-    fontSize: '8px',
-    color: 'var(--text-muted)',
-    fontFamily: 'monospace',
-    marginTop: '2px'
+    color: 'rgba(255,255,255,0.4)',
+    fontFamily: 'var(--font-mono)'
   },
-  centerBlock: {
+  rightPanel: {
+    width: '50%',
+    backgroundColor: 'var(--bg-primary)',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '60px',
+    position: 'relative',
+    overflowY: 'auto'
+  },
+  restrictedWarning: {
+    position: 'absolute',
+    top: '36px',
+    right: '36px',
+    border: 'var(--border-red)',
+    padding: '12px 20px',
+    borderRadius: 'var(--radius-sm)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    backgroundColor: 'var(--bg-secondary)'
+  },
+  restrictedHeader: {
+    fontSize: '9px',
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: '1px',
+    fontWeight: '600'
+  },
+  restrictedTextBold: {
+    fontSize: '18px',
+    fontWeight: '700',
+    color: 'var(--red)',
+    letterSpacing: '1px',
+    fontFamily: 'var(--font-mono)'
+  },
+  restrictedSubText: {
+    fontSize: '11px',
+    color: 'rgba(255,255,255,0.4)'
+  },
+  loginCard: {
+    width: '100%',
+    maxWidth: '420px',
+    backgroundColor: 'var(--bg-panel)',
+    border: 'var(--border)',
+    borderRadius: 'var(--radius-lg)',
+    padding: '40px',
+    boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+  },
+  authHeaderGroup: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    width: '420px'
+    marginBottom: '24px'
   },
-  logoBlock: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    marginBottom: '20px',
+  authTitle: {
+    fontSize: '11px',
+    letterSpacing: '2px',
+    color: 'var(--cyan)',
+    fontWeight: '700',
+    margin: 0,
     textAlign: 'center'
   },
-  shieldRing: {
-    width: '56px',
-    height: '56px',
-    borderRadius: '50%',
-    border: '1px solid rgba(0, 229, 255, 0.3)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: '12px',
-    backgroundColor: 'rgba(0, 229, 255, 0.02)'
-  },
-  shieldIcon: {
-    animation: 'pulse 2s infinite'
-  },
-  drishtiTitle: {
-    fontFamily: "'JetBrains Mono', monospace",
-    fontSize: '24px',
-    fontWeight: '900',
-    letterSpacing: '6px',
-    color: 'var(--text-primary)',
-    marginBottom: '4px'
-  },
-  drishtiSubtitle: {
-    fontFamily: "'JetBrains Mono', monospace",
-    fontSize: '8.5px',
-    color: 'var(--accent)',
-    letterSpacing: '1px',
-    marginBottom: '8px'
-  },
-  drishtiTagline: {
-    fontSize: '9.5px',
-    color: 'var(--text-muted)',
-    fontStyle: 'italic',
-    margin: 0
-  },
-  authCard: {
-    width: '105%',
-    backgroundColor: 'var(--bg-secondary)',
-    border: 'var(--border)',
-    borderRadius: '4px',
-    padding: '24px',
-    boxShadow: 'var(--login-card-shadow)'
-  },
-  authCardHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontSize: '10px',
-    fontFamily: "'JetBrains Mono', monospace",
-    color: 'var(--text-secondary)',
-    borderBottom: '1px solid var(--border-color)',
-    paddingBottom: '10px',
-    marginBottom: '20px'
+  errorAlert: {
+    backgroundColor: 'var(--red-dim)',
+    border: 'var(--border-red)',
+    color: 'var(--red)',
+    padding: '10px 14px',
+    fontSize: '12px',
+    borderRadius: 'var(--radius-sm)',
+    marginBottom: '16px',
+    textAlign: 'center',
+    fontFamily: 'var(--font-mono)'
   },
   form: {
     display: 'flex',
@@ -531,190 +595,145 @@ const styles = {
     flexDirection: 'column',
     gap: '6px'
   },
-  label: {
-    display: 'flex',
-    alignItems: 'center',
-    fontSize: '9px',
-    fontFamily: "'JetBrains Mono', monospace",
-    color: 'var(--text-secondary)'
+  inputLabel: {
+    fontSize: '10px',
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: '1px',
+    fontWeight: '600'
   },
-  input: {
-    backgroundColor: 'var(--bg-primary)',
+  textInput: {
+    width: '100%',
+    backgroundColor: 'var(--bg-card)',
     border: 'var(--border)',
-    color: 'var(--text-primary)',
-    padding: '10px 12px',
-    fontSize: '12px',
-    fontFamily: "'JetBrains Mono', monospace",
+    color: '#ffffff',
+    padding: '14px 16px',
+    borderRadius: 'var(--radius-md)',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '13px',
     outline: 'none',
-    width: '100%'
+    transition: 'var(--transition)'
   },
   passwordWrapper: {
     position: 'relative',
     display: 'flex',
     alignItems: 'center'
   },
-  passwordInput: {
-    backgroundColor: 'var(--bg-primary)',
-    border: 'var(--border)',
-    color: 'var(--text-primary)',
-    padding: '10px 12px',
-    paddingRight: '40px',
-    fontSize: '12px',
-    fontFamily: "'JetBrains Mono', monospace",
-    outline: 'none',
-    width: '100%'
-  },
-  eyeBtn: {
+  passwordToggle: {
     position: 'absolute',
-    right: '12px',
+    right: '16px',
     background: 'none',
     border: 'none',
     cursor: 'pointer',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
+    alignItems: 'center'
   },
-  authBtn: {
+  toggleContainer: {
+    display: 'flex',
+    width: '100%',
+    gap: '8px',
+    margin: '8px 0'
+  },
+  toggleBtn: {
+    flex: 1,
+    padding: '10px 0',
+    fontSize: '11px',
+    fontFamily: 'var(--font-mono)',
+    fontWeight: '600',
+    cursor: 'pointer',
+    borderRadius: 'var(--radius-sm)',
+    transition: 'var(--transition)'
+  },
+  toggleBtnActive: {
+    backgroundColor: 'var(--cyan-dim)',
+    border: 'var(--border-cyan)',
+    color: 'var(--cyan)'
+  },
+  toggleBtnInactive: {
+    backgroundColor: 'transparent',
+    border: 'var(--border)',
+    color: 'rgba(255,255,255,0.4)'
+  },
+  submitBtn: {
+    width: '100%',
+    height: '52px',
+    backgroundColor: 'var(--cyan)',
+    color: '#000000',
+    border: 'none',
+    borderRadius: 'var(--radius-md)',
+    fontFamily: 'var(--font-mono)',
+    fontWeight: '700',
+    fontSize: '13px',
+    letterSpacing: '2px',
+    cursor: 'pointer',
+    transition: 'var(--transition)',
+    marginTop: '8px'
+  },
+  dividerGroup: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'var(--accent)',
-    border: '1px solid var(--accent)',
-    color: 'var(--bg-primary)',
-    padding: '12px',
-    fontSize: '11px',
-    fontFamily: "'JetBrains Mono', monospace",
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    marginTop: '8px',
-    borderRadius: '2px',
-    transition: 'all 0.2s ease'
+    margin: '24px 0 16px 0',
+    position: 'relative'
   },
-  errorAlert: {
-    display: 'flex',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 59, 48, 0.1)',
-    border: '1px solid #ff3b30',
-    color: '#ff3b30',
-    padding: '10px 12px',
-    fontSize: '10px',
-    fontFamily: "'JetBrains Mono', monospace",
-    marginBottom: '16px'
-  },
-  demoCredentialsBox: {
-    marginTop: '20px',
-    borderTop: '1px solid var(--border-color)',
-    paddingTop: '16px'
-  },
-  demoHeader: {
-    display: 'flex',
-    alignItems: 'center',
+  dividerText: {
     fontSize: '9px',
-    fontFamily: "'JetBrains Mono', monospace",
-    color: 'var(--text-muted)',
-    marginBottom: '10px'
+    color: 'rgba(255,255,255,0.3)',
+    letterSpacing: '1px',
+    backgroundColor: 'var(--bg-panel)',
+    padding: '0 10px',
+    zIndex: 1
   },
-  demoList: {
+  demoRows: {
     display: 'flex',
     flexDirection: 'column',
     gap: '6px'
   },
-  demoItemRow: {
+  demoRowItem: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'var(--bg-tertiary)',
+    backgroundColor: 'var(--bg-card)',
     border: 'var(--border)',
-    padding: '6px 10px',
+    borderRadius: 'var(--radius-sm)',
+    padding: '10px 16px',
     cursor: 'pointer',
     outline: 'none',
     width: '100%',
-    textAlign: 'left'
+    textAlign: 'left',
+    transition: 'var(--transition)'
   },
-  demoName: {
-    fontSize: '10px',
-    fontFamily: "'JetBrains Mono', monospace",
-    color: 'var(--text-primary)',
-    fontWeight: 'bold'
+  demoUser: {
+    fontSize: '12px',
+    fontFamily: 'var(--font-mono)',
+    color: '#ffffff',
+    fontWeight: '600'
   },
-  demoLevel: {
-    fontSize: '8px',
-    fontFamily: "'JetBrains Mono', monospace",
-    color: 'var(--text-muted)'
-  },
-  restrictedBox: {
-    border: 'var(--restricted-border)',
-    backgroundColor: 'var(--restricted-bg)',
-    padding: '16px',
-    borderRadius: '4px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    textAlign: 'center'
-  },
-  restrictedHeader: {
-    fontSize: '8px',
-    fontFamily: "'JetBrains Mono', monospace",
-    color: 'var(--text-muted)',
-    letterSpacing: '1px',
-    marginBottom: '6px'
-  },
-  restrictedBody: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px'
-  },
-  restrictedTextBold: {
-    fontSize: '16px',
-    fontWeight: 'bold',
-    color: '#ff3b30',
-    letterSpacing: '2px'
-  },
-  restrictedTextSub: {
+  badge: {
+    display: 'inline-block',
+    padding: '2px 8px',
     fontSize: '9px',
-    color: 'var(--text-secondary)'
+    fontFamily: 'var(--font-mono)',
+    textTransform: 'uppercase',
+    fontWeight: '600',
+    border: '1px solid transparent',
+    borderRadius: '3px'
   },
-  capabilitiesList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
-  },
-  capabilityItem: {
-    fontSize: '9.5px',
-    color: 'var(--text-secondary)',
-    fontFamily: 'sans-serif'
-  },
-  attributionBox: {
-    fontSize: '9px',
-    color: 'var(--text-muted)',
-    lineHeight: '1.4',
+  classifiedFooter: {
+    marginTop: '36px',
     textAlign: 'center',
-    padding: '0 8px'
+    padding: '0 20px'
   },
-  footer: {
-    position: 'absolute',
-    bottom: '0',
-    left: '0',
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: '14px 20px',
-    backgroundColor: 'rgba(7, 10, 18, 0.5)',
-    borderTop: '1px solid var(--border-color)',
-    zIndex: 100
+  classifiedFooterText: {
+    fontSize: '10px',
+    color: 'rgba(255,255,255,0.25)',
+    letterSpacing: '2px',
+    fontWeight: '600',
+    margin: '0 0 6px 0'
   },
-  footerLabel: {
-    fontSize: '8.5px',
-    fontFamily: "'JetBrains Mono', monospace",
-    color: 'var(--text-muted)',
-    letterSpacing: '1px',
-    marginBottom: '4px'
-  },
-  footerSubText: {
-    fontSize: '8px',
-    color: 'var(--text-muted)',
-    fontFamily: 'sans-serif'
+  classifiedWarningText: {
+    fontSize: '10px',
+    color: 'rgba(255,255,255,0.25)',
+    margin: 0
   }
 };
 

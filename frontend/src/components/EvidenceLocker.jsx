@@ -79,6 +79,17 @@ function EvidenceLocker() {
     fetchEvidenceData();
   }, [selectedType, selectedAnalysis, selectedAdmissible, selectedDistrict]);
 
+  // Modals Escape Listener
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedItem(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
     fetchEvidenceData();

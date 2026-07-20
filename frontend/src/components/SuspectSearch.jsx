@@ -35,6 +35,17 @@ function SuspectSearch() {
     fetchSuspects();
   }, []);
 
+  // Modals Escape Listener
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedSuspect(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     fetchSuspects(query);
@@ -200,9 +211,14 @@ function SuspectSearch() {
       {selectedSuspect && (
         <div className="modal-overlay" onClick={() => setSelectedSuspect(null)}>
           <div className="cyber-modal" style={styles.modalBox} onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <span className="modal-title">OFFENDER CRIMINAL DOSSIER</span>
-              <button className="modal-close-btn" onClick={() => setSelectedSuspect(null)}><X size={20} /></button>
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="modal-title" style={{ color: 'var(--cyan)' }}>OFFENDER DOSSIER</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <span style={{ color: 'var(--red)', fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>
+                  CLASSIFIED // TOP SECRET
+                </span>
+                <button className="modal-close-btn" onClick={() => setSelectedSuspect(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: 0 }}><X size={20} /></button>
+              </div>
             </div>
 
             <div className="modal-content" style={styles.modalContent}>
@@ -242,12 +258,20 @@ function SuspectSearch() {
                       <span>THREAT ASSESSMENT SCORE</span>
                       <span style={{ color: getRiskColor(selectedSuspect.RiskLevel), fontWeight: 'bold' }}>{selectedSuspect.RiskScore}/100</span>
                     </div>
-                    <div className="gauge-track" style={styles.gaugeTrack}>
+                    <div className="gauge-track" style={{ height: '8px', background: 'linear-gradient(90deg, var(--green), var(--amber), var(--red))', borderRadius: '4px', position: 'relative', overflow: 'visible', margin: '8px 0' }}>
                       <div 
-                        className="gauge-bar" 
                         style={{ 
-                          width: `${selectedSuspect.RiskScore}%`,
-                          backgroundColor: getRiskColor(selectedSuspect.RiskLevel)
+                          position: 'absolute',
+                          left: `${selectedSuspect.RiskScore}%`,
+                          top: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          width: '14px',
+                          height: '14px',
+                          backgroundColor: '#ffffff',
+                          borderRadius: '50%',
+                          boxShadow: '0 0 8px rgba(0,0,0,0.8)',
+                          border: '2px solid var(--bg-card)',
+                          transition: 'left 0.3s ease'
                         }}
                       />
                     </div>

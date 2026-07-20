@@ -31,6 +31,7 @@ function MissingPersons() {
   // Amber Alert overlay state
   const [amberAlert, setAmberAlert] = useState(null); // holds person object when active
   const [amberAlertsTriggered, setAmberAlertsTriggered] = useState({});
+  const [amberCountdown, setAmberCountdown] = useState(3);
   
   // Toast notifications
   const [successToast, setSuccessToast] = useState('');
@@ -80,6 +81,18 @@ function MissingPersons() {
   useEffect(() => {
     fetchMissingPersons();
   }, [searchTerm, statusFilter, districtFilter, sortBy]);
+
+  // Modals Escape Listener
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedPerson(null);
+        setAmberAlert(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const getMissingDays = (dateStr) => {
     try {
@@ -143,12 +156,21 @@ function MissingPersons() {
   const triggerAmberAlert = (person) => {
     setAmberAlert(person);
     setAmberAlertsTriggered(prev => ({ ...prev, [person.MissingID]: true }));
-    // Auto-dismiss after 3 seconds
-    setTimeout(() => {
+    setAmberCountdown(3);
+  };
+
+  useEffect(() => {
+    if (!amberAlert) return;
+    if (amberCountdown <= 0) {
       setAmberAlert(null);
       showToast("Amber alert broadcast initiated");
-    }, 3000);
-  };
+      return;
+    }
+    const timer = setTimeout(() => {
+      setAmberCountdown(prev => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [amberAlert, amberCountdown]);
 
   return (
     <div style={styles.container}>
@@ -181,15 +203,17 @@ function MissingPersons() {
 
       {/* AMBER ALERT FULLSCREEN OVERLAY */}
       {amberAlert && (
-        <div className="amber-alert-flash" style={{ ...styles.amberOverlay, backgroundColor: '#ff2d55' }}>
-          <div style={styles.amberContent}>
-            <AlertOctagon size={80} color="#ffffff" style={{ marginBottom: '20px' }} />
-            <h1 style={{ ...styles.amberH1, color: '#ffffff' }}>⚠️ CRITICAL BROADCAST: STATE-WIDE AMBER ALERT TRIGGERED FOR {amberAlert.Name.toUpperCase()}</h1>
-            <div style={{ ...styles.amberDetailsCard, background: '#000000', border: '3px solid #ffffff' }}>
-              <h2 style={{ ...styles.amberName, color: '#ff2d55' }}>{amberAlert.Name.toUpperCase()}</h2>
-              <p style={styles.amberText}>AGE: {amberAlert.Age}  |  GENDER: {amberAlert.Gender.toUpperCase()}</p>
-              <p style={styles.amberText}>LAST SEEN: {amberAlert.LastSeenDistrict.toUpperCase()} ({amberAlert.LastSeenLocation.toUpperCase()})</p>
-              <p style={styles.amberWarning}>IF YOU HAVE ANY INFORMATION, PLEASE CONTACT KSP CRIME DIVISION IMMEDIATELY.</p>
+        <div className="amber-alert-flash" style={{ ...styles.amberOverlay, backgroundColor: '#ffaa00', color: '#000000', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
+          <div style={{ ...styles.amberContent, color: '#000000' }}>
+            <h1 style={{ fontSize: '48px', fontWeight: 'bold', margin: '0 0 10px 0', letterSpacing: '2px', color: '#000000', fontFamily: 'var(--font-mono)' }}>⚠️ AMBER ALERT ISSUED</h1>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 20px 0', color: '#000000' }}>
+              {amberAlert.Name.toUpperCase()} — LAST SEEN IN {amberAlert.LastSeenDistrict.toUpperCase()}
+            </h2>
+            <div style={{ margin: '20px auto', display: 'flex', justifyContent: 'center' }}>
+              <Shield size={64} color="#000000" />
+            </div>
+            <div style={{ fontSize: '20px', fontFamily: 'var(--font-mono)', fontWeight: 'bold', marginTop: '20px', color: '#000000' }}>
+              Closing in {amberCountdown}...
             </div>
           </div>
         </div>

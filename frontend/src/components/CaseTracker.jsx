@@ -98,6 +98,45 @@ function CaseTracker({ initialSearchId, clearInitialSearchId }) {
     }
   }, [initialSearchId]);
 
+  // Modals Escape Listener
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') {
+        setViewDoc(null);
+        setViewEvidenceDetail(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  const getStepState = (stepIndex) => {
+    if (!trackedCase) return "future";
+    const current = trackedCase.current_stage;
+    if (current === "Closed") {
+      return "done";
+    }
+    if (stepIndex === 1) {
+      if (current === "FIR Filed") return "current";
+      return "done";
+    }
+    if (stepIndex === 2) {
+      if (current === "FIR Filed") return "future";
+      if (current === "Under Investigation") return "current";
+      return "done";
+    }
+    if (stepIndex === 3) {
+      if (current === "FIR Filed" || current === "Under Investigation") return "future";
+      if (current === "Charge Sheet Submitted") return "current";
+      return "done";
+    }
+    if (stepIndex === 4) {
+      if (current === "Court Trial") return "current";
+      return "future";
+    }
+    return "future";
+  };
+
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3000);
@@ -252,52 +291,67 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
             </div>
           </div>
 
-          {/* 6 STAGES STEPPER */}
-          <div style={styles.stepperContainer}>
-            <div style={styles.stepperLine} />
-            <div style={styles.stepperGrid}>
-              {stagesOrder.map((stageName, idx) => {
-                const stageData = trackedCase.stages[stageName];
-                const isCompleted = stageData?.status === "Completed";
-                const isInProgress = stageData?.status === "In Progress";
-                
-                return (
-                  <div key={stageName} style={styles.stepNode}>
-                    <div 
-                      onClick={() => { if (stageData?.status !== "Pending") setActiveStageTab(stageName); }}
-                      style={{ 
-                        cursor: stageData?.status !== "Pending" ? 'pointer' : 'default',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center'
-                      }}
-                    >
-                      {isCompleted ? (
-                        <div style={styles.nodeCompleted}>
-                          <Check size={12} color="#070a12" strokeWidth={3} />
-                        </div>
-                      ) : isInProgress ? (
-                        <div style={styles.nodeCurrentPulse}>
-                          <div style={styles.nodeCurrentInner} />
-                        </div>
-                      ) : (
-                        <div style={styles.nodePending} />
-                      )}
-                      
-                      <span style={{ 
-                        ...styles.nodeName, 
-                        color: isCompleted ? '#00e5ff' : isInProgress ? '#ffaa00' : '#4f616d'
-                      }}>
-                        {stageName.toUpperCase()}
-                      </span>
-                      <span style={styles.nodeDate}>
-                        {stageData ? stageData.date : 'PENDING'}
-                      </span>
-                    </div>
+          {/* 4 STAGES VERTICAL STEPPER */}
+          <div style={{ position: 'relative', margin: '30px 0', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Vertical connector line */}
+            <div style={{ position: 'absolute', left: '26px', top: '10px', bottom: '10px', width: '2px', backgroundColor: '#1e2d3d', zIndex: 0 }} />
+
+            {[
+              { id: 1, label: "FIR", tab: "FIR Filed", subtitle: "First Information Report filing" },
+              { id: 2, label: "Investigation", tab: "Investigation", subtitle: "Evidence harvesting and forensics" },
+              { id: 3, label: "Charge Sheet", tab: "Chargesheet", subtitle: "Formulation of sections & charges" },
+              { id: 4, label: "Court Registry", tab: "Court Hearing", subtitle: "Case trial and final verdict" }
+            ].map((step) => {
+              const state = getStepState(step.id); // "done", "current", "future"
+              const stageData = trackedCase.stages[step.tab];
+              
+              let color = "rgba(255,255,255,0.3)";
+              let dotBg = "#070a12";
+              let dotBorder = "2px solid #1e2d3d";
+              let dotContent = null;
+
+              if (state === "done") {
+                color = "var(--green)";
+                dotBg = "var(--green)";
+                dotBorder = "2px solid var(--green)";
+                dotContent = <Check size={8} color="#000" strokeWidth={3} style={{ display: 'block' }} />;
+              } else if (state === "current") {
+                color = "var(--cyan)";
+                dotBg = "var(--bg-primary)";
+                dotBorder = "2px solid var(--cyan)";
+                dotContent = <div style={{ backgroundColor: 'var(--cyan)', borderRadius: '50%', width: '4px', height: '4px' }} />;
+              }
+
+              return (
+                <div 
+                  key={step.id} 
+                  style={{ display: 'flex', alignItems: 'center', gap: '16px', zIndex: 1, cursor: 'pointer' }}
+                  onClick={() => {
+                    setActiveStageTab(step.tab);
+                  }}
+                >
+                  <div style={{
+                    width: '14px',
+                    height: '14px',
+                    borderRadius: '50%',
+                    backgroundColor: dotBg,
+                    border: dotBorder,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    {dotContent}
                   </div>
-                );
-              })}
-            </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color, letterSpacing: '0.5px' }}>{step.label.toUpperCase()}</span>
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)' }}>
+                      {step.subtitle} • {stageData ? stageData.date : (state === "done" ? "Completed" : "Pending")}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* SELECTED TIMELINE STAGE DATA DETAILS */}

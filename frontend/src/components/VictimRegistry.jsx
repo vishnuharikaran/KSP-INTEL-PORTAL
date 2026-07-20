@@ -70,6 +70,17 @@ function VictimRegistry({ onNavigateToCase }) {
     fetchVictimsData();
   }, [selectedCrime, selectedDistrict, selectedCompensation, selectedGender]);
 
+  // Modals Escape Listener
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedVictim(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
     fetchVictimsData();
@@ -413,38 +424,79 @@ function VictimRegistry({ onNavigateToCase }) {
                   {/* COMPENSATION TRACKER */}
                   <div style={styles.trackerGroup}>
                     <span style={styles.infoLabel}>COMPENSATION STATUS STEPPER</span>
-                    <div style={styles.stepper}>
-                      {["Applied", "Verified", "Approved", "Disbursed"].map((step, idx) => {
-                        const statusesMap = { Applied: "Pending", Verified: "Pending", Approved: "Approved", Disbursed: "Disbursed" };
-                        const compStatus = selectedVictim.CompensationStatus;
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px', paddingLeft: '8px', position: 'relative' }}>
+                      {/* Vertical line connecting steps */}
+                      <div style={{ position: 'absolute', left: '6px', top: '10px', bottom: '10px', width: '2px', backgroundColor: '#1e2d3d', zIndex: 0 }} />
+
+                      {[
+                        { id: 1, label: "Application", key: "Application" },
+                        { id: 2, label: "Review", key: "Review" },
+                        { id: 3, label: "Disbursed", key: "Disbursed" }
+                      ].map((step) => {
+                        const compStatus = selectedVictim.CompensationStatus; // "Pending", "Processing", "Approved", "Disbursed"
                         
-                        let isActive = false;
-                        if (compStatus === "Pending" && (step === "Applied" || step === "Verified")) isActive = true;
-                        if (compStatus === "Approved" && (step === "Applied" || step === "Verified" || step === "Approved")) isActive = true;
-                        if (compStatus === "Disbursed") isActive = true;
+                        let state = "future"; // "done", "current", "future"
+                        
+                        if (step.id === 1) {
+                          if (compStatus === "Pending") state = "current";
+                          else state = "done";
+                        } else if (step.id === 2) {
+                          if (compStatus === "Pending") state = "future";
+                          else if (compStatus === "Processing" || compStatus === "Approved") state = "current";
+                          else state = "done"; // Disbursed
+                        } else if (step.id === 3) {
+                          if (compStatus === "Disbursed") state = "done";
+                          else state = "future";
+                        }
+
+                        let color = "rgba(255,255,255,0.3)";
+                        let dotBg = "#070a12";
+                        let dotBorder = "2px solid #1e2d3d";
+                        let dotContent = null;
+
+                        if (state === "done") {
+                          color = "var(--green)";
+                          dotBg = "var(--green)";
+                          dotBorder = "2px solid var(--green)";
+                          dotContent = <Check size={8} color="#000" style={{ display: 'block' }} />;
+                        } else if (state === "current") {
+                          color = "var(--cyan)";
+                          dotBg = "var(--bg-primary)";
+                          dotBorder = "2px solid var(--cyan)";
+                          dotContent = <div style={{ backgroundColor: 'var(--cyan)', borderRadius: '50%', width: '4px', height: '4px' }} />;
+                        }
 
                         return (
                           <div 
-                            key={step} 
-                            style={{ 
-                              ...styles.stepNode, 
-                              color: isActive ? '#00e5ff' : '#4f616d',
-                              fontWeight: compStatus === step ? 'bold' : 'normal'
-                            }}
+                            key={step.id} 
+                            style={{ display: 'flex', alignItems: 'center', gap: '14px', zIndex: 1, cursor: 'pointer' }}
                             onClick={() => {
-                              // Map step click to compensation update
-                              let newCompStatus = "Pending";
-                              if (step === "Approved") newCompStatus = "Approved";
-                              if (step === "Disbursed") newCompStatus = "Disbursed";
-                              handleUpdateVictimProfile({ compensation_status: newCompStatus });
+                              let nextStatus = "Pending";
+                              if (step.id === 1) nextStatus = "Pending";
+                              if (step.id === 2) nextStatus = "Processing";
+                              if (step.id === 3) nextStatus = "Disbursed";
+                              handleUpdateVictimProfile({ compensation_status: nextStatus });
                             }}
                           >
                             <div style={{
-                              ...styles.stepperDot,
-                              backgroundColor: isActive ? '#00e5ff' : '#070a12',
-                              border: `1px solid ${isActive ? '#00e5ff' : '#1e2d3d'}`
-                            }} />
-                            <span style={{ fontSize: '9px', marginTop: '4px' }}>{step.toUpperCase()}</span>
+                              width: '14px',
+                              height: '14px',
+                              borderRadius: '50%',
+                              backgroundColor: dotBg,
+                              border: dotBorder,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0
+                            }}>
+                              {dotContent}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontSize: '11px', fontWeight: 'bold', color, letterSpacing: '0.5px' }}>{step.label.toUpperCase()}</span>
+                              <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)' }}>
+                                {state === "done" ? "Completed" : state === "current" ? `In Progress (${compStatus})` : "Awaiting previous steps"}
+                              </span>
+                            </div>
                           </div>
                         );
                       })}

@@ -27,6 +27,17 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
   const [flaggedBanner, setFlaggedBanner] = useState("");
   const [escalatedBanner, setEscalatedBanner] = useState("");
 
+  // Modals Escape Listener
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedCase(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   // Fetch anomalies
   useEffect(() => {
     const fetchAnomalyData = async () => {
@@ -312,13 +323,30 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
         {/* Case Details Modal */}
         {selectedCase && (
           <div className="modal-overlay" onClick={() => setSelectedCase(null)}>
-            <div className="cyber-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
+            <div className="cyber-modal" style={{ position: 'relative', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+              {/* Classified Watermark */}
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%) rotate(-45deg)',
+                fontSize: '80px',
+                opacity: 0.03,
+                color: '#ffffff',
+                fontFamily: 'var(--font-mono)',
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
+                fontWeight: 'bold',
+                zIndex: 0
+              }}>
+                CLASSIFIED
+              </div>
+              <div className="modal-header" style={{ position: 'relative', zIndex: 1 }}>
                 <span className="modal-title">ANOMALOUS DOSSIER DECRYPTION // {selectedCase.case_id}</span>
                 <button className="modal-close-btn" onClick={() => setSelectedCase(null)}>×</button>
               </div>
 
-              <div className="modal-content">
+              <div className="modal-content" style={{ position: 'relative', zIndex: 1 }}>
                 {/* Anomaly score gauge */}
                 <div className="gauge-container">
                   <span className="stat-label" style={{ color: '#ff2d55', fontWeight: 'bold' }}>
