@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import printExport from '../utils/printExport';
 import { 
   BarChart, Bar, AreaChart, Area, XAxis, YAxis, 
   Tooltip, Legend, ResponsiveContainer, ReferenceLine, CartesianGrid 
@@ -89,111 +90,178 @@ function DistrictStats() {
   };
 
   const handleExport = () => {
-    const {
-      overview: ov = {},
-      mom_table: momT = [],
-      top_offenders: topOff = [],
-      hotspots: hs = []
-    } = districtData || {};
+    const hotspotStations = (mom_table || []).map(row => {
+      const total_cases = row.total_cases ?? 0;
+      const resolved = row.resolved ?? 0;
+      const unresolved = row.unresolved ?? (total_cases - resolved);
+      const unresolved_pct = total_cases > 0 ? Math.round((unresolved / total_cases) * 100) : 0;
+      return {
+        station_name: row.station ?? row.district ?? '',
+        total_cases,
+        resolved,
+        unresolved,
+        unresolved_pct,
+        top_crime: row.top_crime ?? '',
+        status: row.status ?? 'NORMAL'
+      };
+    });
 
-    const momRows = (momT || []).map(row => `
-      <tr>
-        <td>${row.district || ''}</td>
-        <td style="text-align:center">${row.total_cases ?? ''}</td>
-        <td style="text-align:center">${row.resolved ?? ''}</td>
-        <td style="text-align:center">${row.unresolved ?? ''}</td>
-        <td>${row.top_crime || ''}</td>
-        <td style="text-align:center">${row.status || ''}</td>
-      </tr>`).join('');
+    const topOffenders = top_offenders || [];
 
-    const offRows = (topOff || []).map(o => `
-      <tr>
-        <td>${o.offender_id || ''}</td>
-        <td>${o.crime_type || ''}</td>
-        <td>${o.mo || ''}</td>
-        <td style="text-align:center">${o.prior_convictions ?? ''}</td>
-        <td style="text-align:center">${(o.status || '').toUpperCase()}</td>
-      </tr>`).join('');
+    const districtStats = {
+      total_cases: overview.total_cases,
+      resolved: overview.resolved,
+      active: overview.active,
+      repeat_offenders: overview.repeat_offenders,
+      peak_day: peakDayName,
+      peak_hour: startH,
+      peak_crime: topCrimeType
+    };
 
-    const hsRows = (hs || []).map(h => `
-      <tr>
-        <td>${h.station || h.name || ''}</td>
-        <td style="text-align:center">${h.cases ?? h.count ?? ''}</td>
-      </tr>`).join('');
+    const stationRows = (hotspotStations || [])
+      .map(s => `
+        <tr>
+          <td>${s.station_name || '—'}</td>
+          <td>${s.total_cases ?? 0}</td>
+          <td>${s.unresolved ?? 0}
+            <span style="color:#94a3b8;
+              font-size:10px">
+              (${s.unresolved_pct ?? 0}%)
+            </span>
+          </td>
+          <td>${s.top_crime || '—'}</td>
+          <td>${s.resolved ?? 0}</td>
+          <td class="${
+            s.status === 'OVERLOADED' ? 'status-high':
+            s.status === 'ACTIVE'     ? 'status-med' :
+            'status-low'
+          }">${s.status || 'NORMAL'}</td>
+        </tr>
+      `).join('');
 
-    const html = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<title>District Statistics Report — ${selectedDistrict}</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Courier New', monospace; font-size: 11pt; color: #000; background: #fff; padding: 30px 40px; }
-  h1 { font-size: 17pt; text-align: center; letter-spacing: 3px; }
-  h2 { font-size: 13pt; text-align: center; margin-top: 4px; }
-  h3 { font-size: 11pt; margin: 20px 0 8px 0; border-bottom: 1px solid #000; padding-bottom: 4px; }
-  .header { border-bottom: 3px double #000; padding-bottom: 14px; margin-bottom: 20px; text-align: center; }
-  .header p { font-size: 9pt; color: #444; margin-top: 5px; }
-  .meta { display: flex; justify-content: space-between; font-size: 10pt; background: #f2f2f2; border: 1px solid #bbb; padding: 8px 14px; margin-bottom: 16px; }
-  .stats-row { display: flex; gap: 16px; margin-bottom: 16px; }
-  .stat-box { flex: 1; border: 1px solid #bbb; padding: 10px; text-align: center; }
-  .stat-box .label { font-size: 8pt; color: #555; text-transform: uppercase; }
-  .stat-box .value { font-size: 16pt; font-weight: bold; margin: 4px 0; }
-  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 16px; }
-  th { text-align: left; padding: 6px; font-weight: bold; background: #f0f0f0; border-bottom: 2px solid #000; }
-  td { padding: 6px; border-bottom: 1px solid #ddd; }
-  .footer { text-align: center; margin-top: 30px; font-size: 9pt; color: #666; border-top: 1px solid #ccc; padding-top: 12px; }
-  .sig { margin-top: 50px; display: flex; justify-content: space-between; font-size: 9pt; border-top: 1px solid #000; padding-top: 10px; }
-  @media print { body { padding: 10px 18px; } }
-</style>
-</head><body>
-  <div class="header">
-    <h1>KARNATAKA STATE POLICE</h1>
-    <h2>DISTRICT CRIME STATISTICS REPORT</h2>
-    <p>Cyber Crime Wing | Intelligence Analysis Division</p>
-  </div>
-  <div class="meta">
-    <span><strong>District:</strong> ${selectedDistrict}</span>
-    <span><strong>Generated:</strong> ${new Date().toLocaleString()} IST</span>
-  </div>
+    const offenderRows = (topOffenders || [])
+      .slice(0, 5)
+      .map(o => `
+        <tr>
+          <td>${o.offender_id || '—'}</td>
+          <td>${o.crime_type || '—'}</td>
+          <td>${o.mo || '—'}</td>
+          <td>${o.prior_convictions ?? 0}</td>
+          <td class="${
+            o.status === 'CRITICAL' ? 'status-high' :
+            o.status === 'HIGH'     ? 'status-med' :
+            'status-low'
+          }">${o.status || '—'}</td>
+        </tr>
+      `).join('');
 
-  <h3>OVERVIEW SUMMARY</h3>
-  <div class="stats-row">
-    <div class="stat-box"><div class="label">Total Cases</div><div class="value">${ov.total_cases ?? 0}</div></div>
-    <div class="stat-box"><div class="label">Active Cases</div><div class="value">${ov.active_cases ?? 0}</div></div>
-    <div class="stat-box"><div class="label">Resolved</div><div class="value">${ov.resolved_cases ?? 0}</div></div>
-    <div class="stat-box"><div class="label">Repeat Offenders</div><div class="value">${ov.repeat_offenders_count ?? 0}</div></div>
-    <div class="stat-box"><div class="label">Avg Loss (₹)</div><div class="value">${Number(ov.avg_loss ?? 0).toLocaleString()}</div></div>
-  </div>
+    printExport({
+      title: `DISTRICT INTELLIGENCE REPORT`,
+      subtitle: `${selectedDistrict} — 
+        Detailed crime analytics and 
+        station performance`,
+      filename: `KSP_District_${
+        selectedDistrict?.replace(/\s+/g,'_')
+      }_${new Date().toISOString().split('T')[0]}`,
+      content: `
 
-  <h3>STATION-WISE CRIME MATRIX</h3>
-  <table>
-    <thead><tr><th>STATION</th><th style="text-align:center">TOTAL</th><th style="text-align:center">RESOLVED</th><th style="text-align:center">UNRESOLVED</th><th>TOP CRIME</th><th style="text-align:center">STATUS</th></tr></thead>
-    <tbody>${momRows || '<tr><td colspan="6">No data available</td></tr>'}</tbody>
-  </table>
+        <!-- STAT STRIP -->
+        <div class="stat-row">
+          <div class="stat-box">
+            <div class="stat-box-label">
+              Total Cases
+            </div>
+            <div class="stat-box-value">
+              ${districtStats?.total_cases ?? 0}
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-label">Resolved</div>
+            <div class="stat-box-value">
+              ${districtStats?.resolved ?? 0}
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-label">
+              Active Investigations
+            </div>
+            <div class="stat-box-value">
+              ${districtStats?.active ?? 0}
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-label">
+              Repeat Offenders
+            </div>
+            <div class="stat-box-value">
+              ${districtStats?.repeat_offenders ?? 0}
+            </div>
+          </div>
+        </div>
 
-  <h3>TOP 5 ACTIVE OFFENDERS</h3>
-  <table>
-    <thead><tr><th>OFFENDER ID</th><th>CRIME TYPE</th><th>MODUS OPERANDI</th><th style="text-align:center">PRIOR CONVICTIONS</th><th style="text-align:center">STATUS</th></tr></thead>
-    <tbody>${offRows || '<tr><td colspan="5">No data available</td></tr>'}</tbody>
-  </table>
+        <!-- HOTSPOT STATIONS -->
+        <div class="section-heading">
+          Crime Hotspot Police Stations
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Station</th>
+              <th>Total Cases</th>
+              <th>Unresolved</th>
+              <th>Top Crime</th>
+              <th>Resolved</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${stationRows || '<tr><td colspan="6">No station data</td></tr>'}
+          </tbody>
+        </table>
 
-  <h3>CRIME HOTSPOT AREAS</h3>
-  <table>
-    <thead><tr><th>STATION / AREA</th><th style="text-align:center">CASES</th></tr></thead>
-    <tbody>${hsRows || '<tr><td colspan="2">No data available</td></tr>'}</tbody>
-  </table>
+        <!-- TOP OFFENDERS -->
+        <div class="section-heading">
+          Top Active Offenders in District
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Offender ID</th>
+              <th>Crime Type</th>
+              <th>Modus Operandi</th>
+              <th>Prior Conv.</th>
+              <th>Risk Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${offenderRows || '<tr><td colspan="5">No offender data</td></tr>'}
+          </tbody>
+        </table>
 
-  <div class="sig">
-    <div><div>REPORT COMPILED BY: KSP INTELLIGENCE PORTAL</div><div>SUPERINTENDENT OF POLICE, CYBER DIVISION</div></div>
-    <div style="text-align:right"><div>SIGNATURE & OFFICIAL STAMP</div><div style="margin-top:25px;border-bottom:1px dashed #000;width:180px;float:right"></div></div>
-  </div>
-  <div class="footer">Karnataka State Police | Cyber Crime Wing | Auto-Generated via KSP Intelligence Portal</div>
-  <script>window.onload = function() { window.print(); }<\/script>
-</body></html>`;
-
-    const win = window.open('', '_blank', 'width=820,height=950');
-    if (!win) { alert('Pop-up blocked. Please allow pop-ups for this site.'); return; }
-    win.document.write(html);
-    win.document.close();
+        <!-- PRIME TIME INTELLIGENCE -->
+        <div class="section-heading">
+          Prime Time Intelligence
+        </div>
+        <div class="alert-card alert-card-amber">
+          <div class="alert-card-title">
+            Peak Crime Window — ${selectedDistrict}
+          </div>
+          <div class="alert-card-body">
+            Peak Day: <strong>
+              ${districtStats?.peak_day ?? 'Friday'}
+            </strong> &nbsp;|&nbsp;
+            Peak Hour: <strong>
+              ${districtStats?.peak_hour ?? '22'}:00
+              — ${(districtStats?.peak_hour ?? 22) + 1}
+              :00 hrs
+            </strong> &nbsp;|&nbsp;
+            Top Crime: <strong>
+              ${districtStats?.peak_crime ?? 'Robbery'}
+            </strong>
+          </div>
+        </div>
+      `
+    });
   };
 
   const handlePasswordSubmit = () => {

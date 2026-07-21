@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import printExport from '../utils/printExport';
 import { 
   Search, ShieldAlert, Check, CheckCircle2, AlertCircle, 
   ArrowRight, FileText, ChevronDown, RefreshCw, Scale, Info 
@@ -109,6 +110,113 @@ function CaseTracker({ initialSearchId, clearInitialSearchId }) {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
+
+  const handlePrint = () => {
+    if (!trackedCase) return;
+
+    const selectedCase = {
+      case_id: trackedCase.id,
+      crime_type: trackedCase.crime_type,
+      district: trackedCase.district,
+      fir_number: trackedCase.fir_number,
+      fir_date: trackedCase.stages["FIR Filed"]?.date,
+      reporting_officer: trackedCase.stages["FIR Filed"]?.reporting_officer || trackedCase.stages["FIR Filed"]?.officer,
+      investigator: trackedCase.stages["Investigation"]?.lead_investigator || trackedCase.stages["Investigation"]?.officer,
+      investigation_date: trackedCase.stages["Investigation"]?.start_date || trackedCase.stages["Investigation"]?.date,
+      offender_id: trackedCase.stages["Arrest"]?.accused_name || 'Offender-402',
+      arrest_date: trackedCase.stages["Arrest"]?.date_of_arrest || trackedCase.stages["Arrest"]?.date,
+      court_name: trackedCase.stages["Chargesheet"]?.court_name || 'Chief Metropolitan Magistrate Court',
+      chargesheet_date: trackedCase.stages["Chargesheet"]?.filed_date || trackedCase.stages["Chargesheet"]?.date,
+      hearing_date: trackedCase.stages["Court Hearing"]?.next_date || trackedCase.stages["Court Hearing"]?.date,
+      next_hearing: trackedCase.stages["Court Hearing"]?.next_date || trackedCase.stages["Court Hearing"]?.next_hearing_date,
+      verdict_date: trackedCase.stages["Verdict"]?.date_of_judgment || trackedCase.stages["Verdict"]?.date,
+      verdict: trackedCase.stages["Verdict"]?.result || trackedCase.stages["Verdict"]?.verdict,
+      station: trackedCase.stages["FIR Filed"]?.police_station || (trackedCase.district + ' Cyber Crime PS'),
+      status: trackedCase.status
+    };
+
+    const stages = [
+      { name: 'FIR FILED', 
+        date: selectedCase.fir_date,
+        detail: `FIR: ${selectedCase.fir_number} | Officer: ${selectedCase.reporting_officer}`,
+        done: true },
+      { name: 'INVESTIGATION', 
+        date: selectedCase.investigation_date,
+        detail: `Lead: ${selectedCase.investigator}`,
+        done: !!selectedCase.investigation_date },
+      { name: 'ARREST', 
+        date: selectedCase.arrest_date,
+        detail: `Accused: ${selectedCase.offender_id}`,
+        done: !!selectedCase.arrest_date },
+      { name: 'CHARGESHEET', 
+        date: selectedCase.chargesheet_date,
+        detail: `Court: ${selectedCase.court_name}`,
+        done: !!selectedCase.chargesheet_date },
+      { name: 'COURT HEARING', 
+        date: selectedCase.hearing_date,
+        detail: `Next: ${selectedCase.next_hearing}`,
+        done: !!selectedCase.hearing_date },
+      { name: 'VERDICT', 
+        date: selectedCase.verdict_date,
+        detail: selectedCase.verdict || 'Pending',
+        done: !!selectedCase.verdict_date }
+    ];
+
+    const timelineHtml = stages.map(s => `
+      <div class="timeline-item">
+        <div class="timeline-dot ${
+          s.done ? '' : 'timeline-dot-pending'
+        }"></div>
+        <div class="timeline-stage">
+          ${s.name}
+        </div>
+        <div class="timeline-date">
+          ${s.date || 'PENDING'}
+        </div>
+        <div class="timeline-detail">
+          ${s.detail || ''}
+        </div>
+      </div>
+    `).join('');
+
+    printExport({
+      title: 'CASE FILE REPORT',
+      subtitle: `Case ID: ${selectedCase.case_id} | ${selectedCase.crime_type} | ${selectedCase.district}`,
+      filename: `KSP_Case_${selectedCase.case_id}`,
+      content: `
+
+        <!-- CASE OVERVIEW -->
+        <div class="section-heading">
+          Case Overview
+        </div>
+        <div class="dossier-grid">
+          ${[
+            ['Case ID',    selectedCase.case_id],
+            ['FIR Number', selectedCase.fir_number],
+            ['Crime Type', selectedCase.crime_type],
+            ['District',   selectedCase.district],
+            ['Station',    selectedCase.station],
+            ['Status',     selectedCase.status]
+          ].map(([l,v]) => `
+            <div class="dossier-field">
+              <div class="dossier-label">${l}</div>
+              <div class="dossier-value">
+                ${v || '—'}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- CASE TIMELINE -->
+        <div class="section-heading">
+          Case Progression Timeline
+        </div>
+        <div class="timeline">
+          ${timelineHtml}
+        </div>
+      `
+    });
+  };
 
   const getStepState = (stepIndex) => {
     if (!trackedCase) return "future";
@@ -266,9 +374,26 @@ Analysis of digital image mirrors harvested lookalike portals. Log details confi
               <Scale size={18} color="var(--cyan)" />
               <span className="chart-title">CASE RETRIEVAL DOSSIER — {trackedCase.id}</span>
             </div>
-            <span className="badge" style={{ backgroundColor: trackedCase.status === "Closed" ? 'rgba(0,255,136,0.08)' : 'rgba(255,170,0,0.08)', color: trackedCase.status === "Closed" ? 'var(--green)' : 'var(--amber)' }}>
-              {trackedCase.status.toUpperCase()}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button 
+                className="cyber-btn-outline" 
+                onClick={handlePrint}
+                style={{
+                  padding: '4px 10px',
+                  fontSize: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  height: '24px'
+                }}
+              >
+                <FileText size={12} />
+                <span>PRINT DOSSIER</span>
+              </button>
+              <span className="badge" style={{ backgroundColor: trackedCase.status === "Closed" ? 'rgba(0,255,136,0.08)' : 'rgba(255,170,0,0.08)', color: trackedCase.status === "Closed" ? 'var(--green)' : 'var(--amber)' }}>
+                {trackedCase.status.toUpperCase()}
+              </span>
+            </div>
           </div>
 
           {/* META INFO STRIP */}

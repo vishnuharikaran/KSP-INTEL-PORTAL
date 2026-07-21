@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Copy, Printer, Check, ShieldAlert, Save, Database, RefreshCw } from 'lucide-react';
+import printExport from '../utils/printExport';
 
 const DISTRICTS = [
   "Bagalkot","Ballari","Belagavi","Bengaluru Rural","Bengaluru Urban",
@@ -152,127 +153,172 @@ function FIRAssistant() {
   const handlePrint = () => {
     if (!firData) return;
 
-    // Always substitute current officer fields into fir_text before printing
-    let printText = firData.fir_text;
-    if (investigatingOfficer) {
-      printText = printText.replace(
-        /Investigating Officer : .*/,
-        `Investigating Officer : ${investigatingOfficer}`
-      );
-    }
-    if (officerDesignation) {
-      printText = printText.replace(
-        /Designation           : .*/,
-        `Designation           : ${officerDesignation}`
-      );
+    let dateVal = '—';
+    let timeVal = '—';
+    if (incidentDatetime) {
+      if (incidentDatetime.includes('T')) {
+        const [d, t] = incidentDatetime.split('T');
+        dateVal = d;
+        timeVal = t;
+      } else {
+        dateVal = incidentDatetime;
+      }
     }
 
-    const sectionsHtml = firData.ipc_sections
-      .map(s => `<span style="border:1px solid #333;padding:2px 8px;margin-right:6px;font-size:11px;">${s}</span>`)
-      .join('');
+    const evidenceList = Object.keys(evidence).filter(k => evidence[k]);
 
-    const printContent = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>FIR ${firData.fir_number}</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 12pt;
-      color: #000;
-      background: #fff;
-      padding: 30px 40px;
-    }
-    .header {
-      text-align: center;
-      border-bottom: 3px double #000;
-      padding-bottom: 14px;
-      margin-bottom: 20px;
-    }
-    .header h1 { font-size: 17pt; letter-spacing: 3px; font-weight: bold; }
-    .header p  { font-size: 10pt; color: #444; margin-top: 5px; }
-    .meta-bar {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10pt;
-      background: #f2f2f2;
-      border: 1px solid #bbb;
-      padding: 8px 14px;
-      margin-bottom: 16px;
-    }
-    .officer-bar {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10pt;
-      border: 1px solid #bbb;
-      padding: 8px 14px;
-      margin-bottom: 16px;
-      background: #fafafa;
-    }
-    .sections-bar { margin-bottom: 16px; }
-    .sections-bar label { font-size: 9pt; color: #555; display: block; margin-bottom: 6px; font-weight: bold; }
-    pre {
-      white-space: pre-wrap;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 11pt;
-      line-height: 1.8;
-      border: 1px solid #ccc;
-      padding: 20px 24px;
-      background: #fafafa;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 9pt;
-      color: #666;
-      border-top: 1px solid #ccc;
-      padding-top: 12px;
-    }
-    @media print {
-      body { padding: 10px 18px; font-size: 11pt; }
-      .no-print { display: none; }
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>KARNATAKA STATE POLICE</h1>
-    <p>Cyber Crime Wing &nbsp;|&nbsp; First Information Report &nbsp;|&nbsp; Under Section 154 Cr.P.C.</p>
-  </div>
+    const generatedFIR = {
+      fir_number: firData.fir_number,
+      evidence: evidenceList,
+      ipc_sections: firData.ipc_sections,
+      date: dateVal,
+      time: timeVal,
+      station: policeStation,
+      district: district,
+      complainant: complainantName,
+      crime_type: crimeType,
+      accused: accusedDetails || 'Unknown',
+      description: description
+    };
 
-  <div class="meta-bar">
-    <span><strong>FIR No:</strong> ${firData.fir_number}</span>
-    <span><strong>Generated:</strong> ${firData.generated_at || new Date().toLocaleString()} IST</span>
-  </div>
+    const evidenceListStr = Array.isArray(
+      generatedFIR.evidence
+    )
+      ? generatedFIR.evidence.join(', ')
+      : generatedFIR.evidence || '—';
 
-  <div class="officer-bar">
-    <span><strong>Investigating Officer:</strong> ${investigatingOfficer || '______________________'}</span>
-    <span><strong>Designation:</strong> ${officerDesignation || '______________________'}</span>
-  </div>
+    const ipcTags = (generatedFIR.ipc_sections || [])
+      .map(s => `
+        <span style="
+          display:inline-block;
+          padding:3px 10px;
+          margin:2px;
+          background:#eff6ff;
+          border:1px solid #bfdbfe;
+          border-radius:4px;
+          font-size:11px;
+          font-family:monospace;
+          color:#0077cc;
+          font-weight:600
+        ">${s}</span>
+      `).join('');
 
-  <div class="sections-bar">
-    <label>APPLICABLE LEGAL SECTIONS:</label>
-    ${sectionsHtml}
-  </div>
+    printExport({
+      title: 'FIRST INFORMATION REPORT',
+      subtitle: `FIR No: ${generatedFIR.fir_number}`,
+      filename: `FIR_${generatedFIR.fir_number?.replace(/\//g,'_')}`,
+      content: `
+        <div class="fir-doc">
+          <div class="fir-header">
+            <div class="fir-title">
+              FIRST INFORMATION REPORT
+            </div>
+            <div class="fir-subtitle">
+              Under Section 173 BNSS / 
+              Section 154 Cr.P.C.
+            </div>
+          </div>
 
-  <pre>${printText}</pre>
+          <div class="fir-row">
+            <span class="fir-field-label">
+              FIR Number:
+            </span>
+            <span class="fir-field-value">
+              ${generatedFIR.fir_number || '—'}
+            </span>
+          </div>
+          <div class="fir-row">
+            <span class="fir-field-label">
+              Date & Time:
+            </span>
+            <span class="fir-field-value">
+              ${generatedFIR.date || '—'} 
+              at ${generatedFIR.time || '—'}
+            </span>
+          </div>
+          <div class="fir-row">
+            <span class="fir-field-label">
+              Police Station:
+            </span>
+            <span class="fir-field-value">
+              ${generatedFIR.station || '—'}
+            </span>
+          </div>
+          <div class="fir-row">
+            <span class="fir-field-label">
+              District:
+            </span>
+            <span class="fir-field-value">
+              ${generatedFIR.district || '—'}
+            </span>
+          </div>
+          <div class="fir-row">
+            <span class="fir-field-label">
+              Complainant Name:
+            </span>
+            <span class="fir-field-value">
+              ${generatedFIR.complainant || '—'}
+            </span>
+          </div>
+          <div class="fir-row">
+            <span class="fir-field-label">
+              Crime Type:
+            </span>
+            <span class="fir-field-value">
+              ${generatedFIR.crime_type || '—'}
+            </span>
+          </div>
+          <div class="fir-row">
+            <span class="fir-field-label">
+              Accused Details:
+            </span>
+            <span class="fir-field-value">
+              ${generatedFIR.accused || 'Unknown'}
+            </span>
+          </div>
+          <div class="fir-row">
+            <span class="fir-field-label">
+              Evidence Available:
+            </span>
+            <span class="fir-field-value">
+              ${evidenceListStr}
+            </span>
+          </div>
+          <div class="fir-row" style="
+            align-items:flex-start;
+            border-bottom:none
+          ">
+            <span class="fir-field-label">
+              Incident Description:
+            </span>
+            <span class="fir-field-value" style="
+              line-height:1.6
+            ">
+              ${generatedFIR.description || '—'}
+            </span>
+          </div>
 
-  <div class="footer">
-    Karnataka State Police &nbsp;|&nbsp; Cyber Crime Wing &nbsp;|&nbsp; Auto-Generated via KSP Intelligence Portal
-  </div>
-  <script>window.onload = function() { window.print(); }<\/script>
-</body>
-</html>`;
+          <div class="fir-ipc">
+            <div class="fir-ipc-title">
+              Applicable IPC / BNS Sections
+            </div>
+            <div>${ipcTags}</div>
+          </div>
 
-    const printWindow = window.open('', '_blank', 'width=820,height=950');
-    if (!printWindow) {
-      alert('Pop-up blocked. Please allow pop-ups for this site to print.');
-      return;
-    }
-    printWindow.document.write(printContent);
-    printWindow.document.close();
+          <div class="fir-sign-row">
+            <div class="fir-sign-box">
+              Complainant Signature
+            </div>
+            <div class="fir-sign-box">
+              Investigating Officer
+            </div>
+            <div class="fir-sign-box">
+              Station House Officer
+            </div>
+          </div>
+        </div>
+      `
+    });
   };
 
   /* ─────────────────────────────────────────────────────────── */

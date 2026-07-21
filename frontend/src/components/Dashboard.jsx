@@ -17,7 +17,7 @@ import LiveIntelFeed from './LiveIntelFeed';
 
 // 6 Enhanced dashboards
 import DistrictStats from './DistrictStats';
-import CrimeCalendar from './CrimeCalendar';
+
 import CaseTracker from './CaseTracker';
 import ResourceDeployment from './ResourceDeployment';
 import VictimRegistry from './VictimRegistry';
@@ -41,7 +41,6 @@ import {
   Heart, 
   Archive, 
   FileText, 
-  Calendar, 
   BarChart3, 
   LogOut, 
   Bell, 
@@ -174,15 +173,7 @@ function Dashboard({
                   }} />
                 </ErrorBoundary>
               );
-            case 'crime-calendar':
-              return (
-                <ErrorBoundary>
-                  <CrimeCalendar onNavigateToCase={(caseId) => {
-                    setSearchCaseId(caseId);
-                    setActiveTab('case-tracker');
-                  }} />
-                </ErrorBoundary>
-              );
+
             case 'case-tracker':
               return <CaseTracker initialSearchId={searchCaseId} clearInitialSearchId={() => setSearchCaseId("")} />;
             case 'resource-deployment':
@@ -208,8 +199,7 @@ function Dashboard({
       items: [
         { id: role === 'higher_official' ? 'overview-official' : 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'crimemap', label: 'Crime Map', icon: Map },
-        { id: 'district-stats', label: 'District Statistics', icon: BarChart3 },
-        { id: 'crime-calendar', label: 'Crime Calendar', icon: Calendar }
+        { id: 'district-stats', label: 'District Statistics', icon: BarChart3 }
       ]
     },
     {

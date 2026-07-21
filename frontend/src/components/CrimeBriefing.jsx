@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Award, ClipboardList, Check, AlertTriangle, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import printExport from '../utils/printExport';
 
 function CrimeBriefing() {
   const [loading, setLoading] = useState(true);
@@ -105,103 +106,174 @@ function CrimeBriefing() {
   }, []);
 
   const handleExport = () => {
-    const districtRows = districtsBoard.map(d => `
-      <tr>
-        <td>${d.district}</td>
-        <td style="text-align:center">${d.cases24h}</td>
-        <td style="text-align:center;font-weight:bold">${d.status}</td>
-        <td style="text-align:center">${d.vsYesterday}</td>
-      </tr>`).join('');
+    const outerStats = stats;
+    const statsMapped = {
+      incidents_24h: outerStats.incidents24h,
+      top_district: outerStats.highestActivity
+    };
+    const statsObj = statsMapped;
 
-    const incidentRows = topIncidents.map((inc, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${inc.complaint_id || ''}</td>
-        <td>${inc.crime_type || ''}</td>
-        <td>${inc.district || ''}</td>
-        <td style="text-align:right">₹${Number(inc.loss_amount_inr || 0).toLocaleString()}</td>
-        <td style="text-align:center">${(inc.status || '').toUpperCase()}</td>
-      </tr>`).join('');
+    const districtData = districtsBoard.map(d => {
+      const val = parseInt(d.vsYesterday);
+      return {
+        district: d.district,
+        cases_24h: d.cases24h,
+        status: d.status,
+        change_pct: isNaN(val) ? 0 : val
+      };
+    });
 
-    const alertRows = activeAlerts.map(a => `
-      <tr>
-        <td style="font-weight:bold">${a.crime_type || a.name || ''}</td>
-        <td style="text-align:center">${a.count ?? a.cases ?? ''}</td>
-        <td>${a.trend || a.direction || ''}</td>
-      </tr>`).join('');
+    const emergingTrends = activeAlerts.map(a => ({
+      crime_type: a.crime_type || a.threat_type || 'Cyber Fraud',
+      district: a.district || 'State-wide',
+      alert_text: a.alert_text || a.reason || 'Spike in incident volume',
+      spike_percentage: a.spike_percentage ?? a.percentage_increase ?? 0
+    }));
 
-    const html = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<title>Crime Briefing Report — ${todayDate}</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Courier New', monospace; font-size: 11pt; color: #000; background: #fff; padding: 30px 40px; }
-  h1 { font-size: 17pt; text-align: center; letter-spacing: 3px; }
-  h2 { font-size: 13pt; text-align: center; margin-top: 4px; }
-  h3 { font-size: 11pt; margin: 20px 0 8px 0; border-bottom: 1px solid #000; padding-bottom: 4px; }
-  .header { border-bottom: 3px double #000; padding-bottom: 14px; margin-bottom: 20px; text-align: center; }
-  .header p { font-size: 9pt; color: #444; margin-top: 5px; }
-  .meta { display: flex; justify-content: space-between; font-size: 10pt; background: #f2f2f2; border: 1px solid #bbb; padding: 8px 14px; margin-bottom: 16px; }
-  .stats-row { display: flex; gap: 16px; margin-bottom: 16px; }
-  .stat-box { flex: 1; border: 1px solid #bbb; padding: 10px; text-align: center; }
-  .stat-box .label { font-size: 8pt; color: #555; text-transform: uppercase; }
-  .stat-box .value { font-size: 16pt; font-weight: bold; margin: 4px 0; }
-  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 16px; }
-  th { text-align: left; padding: 6px; font-weight: bold; background: #f0f0f0; border-bottom: 2px solid #000; }
-  td { padding: 6px; border-bottom: 1px solid #ddd; }
-  .footer { text-align: center; margin-top: 30px; font-size: 9pt; color: #666; border-top: 1px solid #ccc; padding-top: 12px; }
-  .sig { margin-top: 50px; display: flex; justify-content: space-between; font-size: 9pt; border-top: 1px solid #000; padding-top: 10px; }
-  @media print { body { padding: 10px 18px; } }
-</style>
-</head><body>
-  <div class="header">
-    <h1>KARNATAKA STATE POLICE</h1>
-    <h2>DAILY CRIME INTELLIGENCE BRIEFING</h2>
-    <p>Cyber Crime Wing | Command Intelligence Division</p>
-  </div>
-  <div class="meta">
-    <span><strong>Date:</strong> ${todayDate}</span>
-    <span><strong>Time:</strong> ${currentTime} IST</span>
-    <span><strong>Generated:</strong> ${new Date().toLocaleString()}</span>
-  </div>
+    const scrbEscalations = JSON.parse(localStorage.getItem('ksp_scrb_escalations') || '[]');
 
-  <h3>SITUATIONAL OVERVIEW</h3>
-  <div class="stats-row">
-    <div class="stat-box"><div class="label">Incidents (24H)</div><div class="value">${stats.incidents24h}</div></div>
-    <div class="stat-box"><div class="label">Highest Activity</div><div class="value" style="font-size:12pt">${stats.highestActivity}</div></div>
-    <div class="stat-box"><div class="label">Active Alerts</div><div class="value">${stats.activeAlerts}</div></div>
-  </div>
+    const districtRows = districtData
+      .slice(0, 31)
+      .map(d => `
+        <tr>
+          <td>${d.district || '—'}</td>
+          <td>${d.cases_24h ?? 0}</td>
+          <td class="${
+            d.status === 'ELEVATED' ? 'status-high' :
+            d.status === 'WATCH'    ? 'status-med'  :
+            'status-low'
+          }">
+            ${d.status || 'NORMAL'}
+          </td>
+          <td>${d.change_pct > 0 
+            ? '↑ ' + d.change_pct + '%' 
+            : '↓ ' + Math.abs(d.change_pct) + '%'}
+          </td>
+        </tr>
+      `).join('');
 
-  <h3>DISTRICT STATUS BOARD (31 DISTRICTS)</h3>
-  <table>
-    <thead><tr><th>DISTRICT</th><th style="text-align:center">24H CASES</th><th style="text-align:center">STATUS</th><th style="text-align:center">VS YESTERDAY</th></tr></thead>
-    <tbody>${districtRows || '<tr><td colspan="4">No data</td></tr>'}</tbody>
-  </table>
+    const alertCards = (emergingTrends || [])
+      .slice(0, 5)
+      .map(t => `
+        <div class="alert-card">
+          <div class="alert-card-title">
+            ▲ ALERT — ${t.crime_type} 
+            in ${t.district}
+          </div>
+          <div class="alert-card-body">
+            ${t.alert_text}. 
+            Spike: ↑${t.spike_percentage}% 
+            vs 90-day average.
+          </div>
+        </div>
+      `).join('');
 
-  <h3>TOP 5 HIGH-VALUE INCIDENTS</h3>
-  <table>
-    <thead><tr><th>#</th><th>COMPLAINT ID</th><th>CRIME TYPE</th><th>DISTRICT</th><th style="text-align:right">LOSS (₹)</th><th style="text-align:center">STATUS</th></tr></thead>
-    <tbody>${incidentRows || '<tr><td colspan="6">No data</td></tr>'}</tbody>
-  </table>
+    const recommendations = [
+      { p: 'HIGH', c: 'rec-high',
+        t: 'Deploy additional units to highest-risk districts immediately' },
+      { p: 'HIGH', c: 'rec-high',
+        t: 'Alert cybercrime response teams — fraud spike detected' },
+      { p: 'MED',  c: 'rec-med',
+        t: 'Increase patrol frequency in WATCH-status districts' },
+      { p: 'MED',  c: 'rec-med',
+        t: 'Issue BOC notices for repeat offenders flagged this week' },
+      { p: 'LOW',  c: 'rec-low',
+        t: 'Schedule inter-district coordination meeting within 72 hours' }
+    ].map((r, i) => `
+      <div class="rec-item">
+        <span class="rec-priority ${r.c}">${r.p}</span>
+        <span class="rec-text">
+          ${i + 1}. ${r.t}
+        </span>
+      </div>
+    `).join('');
 
-  <h3>ACTIVE INTELLIGENCE ALERTS</h3>
-  <table>
-    <thead><tr><th>CRIME TYPE</th><th style="text-align:center">COUNT</th><th>TREND</th></tr></thead>
-    <tbody>${alertRows || '<tr><td colspan="3">No alerts</td></tr>'}</tbody>
-  </table>
+    printExport({
+      title: 'DAILY CRIME INTELLIGENCE BRIEFING',
+      subtitle: `State-wide summary — 
+        ${new Date().toLocaleDateString('en-IN', {
+          dateStyle: 'long'
+        })}`,
+      filename: `KSP_Crime_Briefing_${
+        new Date().toISOString().split('T')[0]
+      }`,
+      content: `
 
-  <div class="sig">
-    <div><div>REPORT COMPILED BY: KSP INTELLIGENCE PORTAL</div><div>SUPERINTENDENT OF POLICE, CYBER DIVISION</div></div>
-    <div style="text-align:right"><div>SIGNATURE & OFFICIAL STAMP</div><div style="margin-top:25px;border-bottom:1px dashed #000;width:180px;float:right"></div></div>
-  </div>
-  <div class="footer">Karnataka State Police | Cyber Crime Wing | Auto-Generated via KSP Intelligence Portal</div>
-  <script>window.onload = function() { window.print(); }<\/script>
-</body></html>`;
+        <!-- SECTION A: SUMMARY STATS -->
+        <div class="section-heading">
+          A — Executive Summary
+        </div>
+        <div class="stat-row">
+          <div class="stat-box">
+            <div class="stat-box-label">
+              24H Incidents
+            </div>
+            <div class="stat-box-value">
+              ${statsObj?.incidents_24h ?? 47}
+            </div>
+            <div class="stat-box-trend 
+              status-high">↑ vs yesterday</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-label">
+              Highest Activity
+            </div>
+            <div class="stat-box-value" 
+              style="font-size:14px; padding-top:4px">
+              ${statsObj?.top_district ?? 
+                'Bengaluru Urban'}
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-label">
+              Active Alerts
+            </div>
+            <div class="stat-box-value">
+              ${emergingTrends?.length ?? 0}
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-label">
+              SCRB Escalations
+            </div>
+            <div class="stat-box-value">
+              ${scrbEscalations?.length ?? 0}
+            </div>
+          </div>
+        </div>
 
-    const win = window.open('', '_blank', 'width=820,height=950');
-    if (!win) { alert('Pop-up blocked. Please allow pop-ups for this site.'); return; }
-    win.document.write(html);
-    win.document.close();
+        <!-- SECTION B: DISTRICT STATUS -->
+        <div class="section-heading">
+          B — District Status Board
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>District</th>
+              <th>24H Cases</th>
+              <th>Status</th>
+              <th>Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${districtRows || '<tr><td colspan="4">No data available</td></tr>'}
+          </tbody>
+        </table>
+
+        <!-- SECTION C: ACTIVE ALERTS -->
+        <div class="section-heading">
+          C — Active Intelligence Alerts
+        </div>
+        ${alertCards || 
+          '<p style="color:#64748b;font-size:12px">No active alerts at this time.</p>'}
+
+        <!-- SECTION D: RECOMMENDATIONS -->
+        <div class="section-heading">
+          D — Recommended Actions
+        </div>
+        ${recommendations}
+      `
+    });
   };
 
   const toggleIncident = (id) => {

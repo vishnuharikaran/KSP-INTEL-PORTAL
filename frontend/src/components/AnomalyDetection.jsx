@@ -1,15 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  ScatterChart, 
-  Scatter, 
-  XAxis, 
-  YAxis, 
-  ZAxis,
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ReferenceLine,
-  ResponsiveContainer 
+import {
+  ScatterChart, Scatter, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer,
+  ReferenceLine
 } from 'recharts';
 import { ShieldAlert, AlertOctagon, HelpCircle, FileText, CheckCircle, ArrowRight, UserCheck } from 'lucide-react';
 
@@ -144,35 +137,41 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
     );
   }
 
-  const anomaliesPlot = anomalies.map(a => {
-    const hr = parseInt((a.time_of_day || '12:00').split(':')[0]);
-    const age = a.offender_age || 30;
-    const loss = a.loss_amount || a.loss_amount_inr || 0;
-
-    // Use API alert_level if present, otherwise compute from data
-    let level = a.alert_level;
-    if (!level || !['CRITICAL', 'HIGH', 'MEDIUM'].includes(level)) {
-      if (loss > 200000 || (hr >= 22 && age <= 25)) {
-        level = 'CRITICAL';
-      } else if (loss > 80000 || hr >= 20 || age <= 22) {
-        level = 'HIGH';
-      } else {
-        level = 'MEDIUM';
+  const scatterData = anomalies
+    .filter(c => c && c.time_of_day !== undefined 
+                 && c.offender_age !== undefined)
+    .map(c => {
+      let hr = 12;
+      if (typeof c.time_of_day === 'string') {
+        hr = Number(c.time_of_day.split(':')[0]);
+      } else if (typeof c.time_of_day === 'number') {
+        hr = c.time_of_day;
       }
-    }
+      if (isNaN(hr)) hr = 12;
 
-    let size = 45;
-    if (level === 'CRITICAL') size = 120;
-    else if (level === 'HIGH') size = 80;
+      return {
+        x: hr,
+        y: Number(c.offender_age),
+        alertLevel: c.alert_level || 'MEDIUM',
+        caseId: c.case_id,
+        district: c.district,
+        crimeType: c.crime_type,
+        reason: c.reason,
+        anomalyScore: Number(c.anomaly_score || 0)
+      };
+    });
 
-    return {
-      x: hr,
-      y: age,
-      z: size,
-      label: a.case_id,
-      level
-    };
-  });
+  const getColor = (level) => {
+    if (level === 'CRITICAL') return '#8B0000';
+    if (level === 'HIGH')     return '#FF6B35';
+    return '#00C851';
+  };
+
+  const getDotSize = (level) => {
+    if (level === 'CRITICAL') return 10;
+    if (level === 'HIGH')     return 7;
+    return 5;
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '15px' }}>
@@ -251,86 +250,334 @@ function AnomalyDetection({ flaggedCases = [], addFlaggedCase, scrbEscalations =
         </div>
 
         {/* Column 2: Scatter Plot */}
-        <div style={styles.rightCol}>
-          <div className="chart-card" style={{ height: '100%' }}>
-            <div className="chart-header">
-              <span className="chart-title">BEHAVIORAL MULTIVARIATE SCATTER PLOT</span>
+        <div style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          borderRadius: '12px',
+          padding: '24px'
+        }}>
+
+          {/* Header */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: '8px'
+          }}>
+            <div>
+              <div style={{
+                fontSize: '11px',
+                letterSpacing: '2px',
+                color: 'var(--text-label)',
+                fontFamily: 'JetBrains Mono',
+                textTransform: 'uppercase',
+                marginBottom: '4px'
+              }}>
+                BEHAVIORAL MULTIVARIATE SCATTER PLOT
+              </div>
+              <div style={{
+                fontSize: '12px',
+                color: 'var(--text-dim)'
+              }}>
+                Anomalous incidents only — 
+                {scatterData.length} cases plotted.
+                Normal incidents excluded.
+              </div>
             </div>
 
-            <div style={{ height: '340px', marginTop: '10px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                  <CartesianGrid stroke="#1a2a3a" strokeDasharray="3 3" />
-                  <XAxis 
-                    type="number" 
-                    dataKey="x" 
-                    name="Time of Day" 
-                    unit="h" 
-                    domain={[0, 24]} 
-                    stroke="var(--cyan)"
-                    style={{ fontFamily: 'monospace', fontSize: '10px' }}
-                  />
-                  <YAxis 
-                    type="number" 
-                    dataKey="y" 
-                    name="Offender Age" 
-                    unit="y" 
-                    domain={[15, 70]} 
-                    stroke="var(--cyan)"
-                    style={{ fontFamily: 'monospace', fontSize: '10px' }}
-                  />
-                  <ZAxis 
-                    type="number" 
-                    dataKey="z" 
-                    range={[45, 120]} 
-                  />
-                  <Tooltip 
-                    cursor={{ strokeDasharray: '3 3' }} 
-                    contentStyle={{
-                      backgroundColor: '#0a0d14',
-                      border: '1px solid #1a2a3a',
-                      fontFamily: 'monospace',
+            {/* Legend */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              flexShrink: 0
+            }}>
+              {[
+                { level: 'CRITICAL', color: '#8B0000', 
+                  label: 'Critical — Immediate Action' },
+                { level: 'HIGH',     color: '#FF6B35', 
+                  label: 'High — Within 24h' },
+                { level: 'MEDIUM',   color: '#00C851', 
+                  label: 'Medium — Monitor' }
+              ].map(({ color, label }) => (
+                <div key={label} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <div style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '2px',
+                    background: color,
+                    flexShrink: 0
+                  }} />
+                  <span style={{
+                    fontSize: '10px',
+                    color: 'var(--text-label)',
+                    fontFamily: 'JetBrains Mono',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Chart */}
+          <ResponsiveContainer width="100%" height={340}>
+            <ScatterChart
+              margin={{ top: 20, right: 30, 
+                        bottom: 40, left: 40 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--chart-grid)"
+                opacity={0.5}
+              />
+              <XAxis
+                type="number"
+                dataKey="x"
+                domain={[0, 23]}
+                ticks={[0,3,6,9,12,15,18,21,23]}
+                tickFormatter={v => `${v}:00`}
+                label={{
+                  value: 'TIME OF DAY (HOUR)',
+                  position: 'insideBottom',
+                  offset: -25,
+                  fill: 'var(--chart-text)',
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  fontFamily: 'JetBrains Mono'
+                }}
+                tick={{
+                  fill: 'var(--chart-text)',
+                  fontSize: 11,
+                  fontFamily: 'JetBrains Mono'
+                }}
+                axisLine={{ stroke: 'var(--border)' }}
+                tickLine={{ stroke: 'var(--border)' }}
+              />
+              <YAxis
+                type="number"
+                dataKey="y"
+                domain={[15, 65]}
+                label={{
+                  value: 'OFFENDER AGE',
+                  angle: -90,
+                  position: 'insideLeft',
+                  offset: 10,
+                  fill: 'var(--chart-text)',
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  fontFamily: 'JetBrains Mono'
+                }}
+                tick={{
+                  fill: 'var(--chart-text)',
+                  fontSize: 11,
+                  fontFamily: 'JetBrains Mono'
+                }}
+                axisLine={{ stroke: 'var(--border)' }}
+                tickLine={{ stroke: 'var(--border)' }}
+              />
+
+              {/* Night reference line */}
+              <ReferenceLine
+                x={22}
+                stroke="var(--red)"
+                strokeDasharray="4 4"
+                strokeOpacity={0.4}
+                label={{
+                  value: 'NIGHT',
+                  fill: 'var(--red)',
+                  fontSize: 9,
+                  fontFamily: 'JetBrains Mono'
+                }}
+              />
+
+              {/* Young offender reference line */}
+              <ReferenceLine
+                y={25}
+                stroke="var(--amber)"
+                strokeDasharray="4 4"
+                strokeOpacity={0.4}
+                label={{
+                  value: 'AGE 25',
+                  fill: 'var(--amber)',
+                  fontSize: 9,
+                  fontFamily: 'JetBrains Mono',
+                  position: 'right'
+                }}
+              />
+
+              <Tooltip
+                cursor={{ 
+                  strokeDasharray: '3 3',
+                  stroke: 'var(--border)' 
+                }}
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const d = payload[0]?.payload;
+                  if (!d) return null;
+                  return (
+                    <div style={{
+                      background: 'var(--tooltip-bg)',
+                      border: `1px solid ${getColor(d.alertLevel)}`,
+                      borderRadius: '8px',
+                      padding: '12px 16px',
+                      fontFamily: 'JetBrains Mono',
                       fontSize: '11px',
-                    }}
-                    labelStyle={{ color: '#ffffff' }}
-                  />
-                  
-                  {/* Critical anomalies series */}
-                  <Scatter 
-                    name="Critical Outlier" 
-                    data={anomaliesPlot.filter(a => a.level === 'CRITICAL')} 
-                    fill="#8b0000" 
-                    shape="circle" 
-                  />
+                      minWidth: '200px',
+                      boxShadow: 'var(--shadow-card)'
+                    }}>
+                      <div style={{
+                        color: getColor(d.alertLevel),
+                        letterSpacing: '1px',
+                        marginBottom: '8px',
+                        fontWeight: '700'
+                      }}>
+                        {d.alertLevel} — {d.caseId}
+                      </div>
+                      {[
+                        ['DISTRICT',    d.district],
+                        ['CRIME',       d.crimeType],
+                        ['TIME',        `${d.x}:00 hrs`],
+                        ['AGE',         `${d.y} years`],
+                        ['ANOMALY',     
+                          d.anomalyScore?.toFixed(3)],
+                        ['REASON',      d.reason]
+                      ].map(([label, value]) => (
+                        <div key={label} style={{
+                          display: 'flex',
+                          gap: '8px',
+                          marginBottom: '4px'
+                        }}>
+                          <span style={{
+                            color: 'var(--text-dim)',
+                            minWidth: '72px',
+                            fontSize: '10px'
+                          }}>
+                            {label}
+                          </span>
+                          <span style={{
+                            color: 'var(--text-primary)',
+                            fontSize: '11px'
+                          }}>
+                            {value || '—'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }}
+              />
 
-                  {/* High anomalies series */}
-                  <Scatter 
-                    name="High Outlier" 
-                    data={anomaliesPlot.filter(a => a.level === 'HIGH')} 
-                    fill="#ff9500" 
-                    shape="circle" 
-                  />
+              {/* CRITICAL dots */}
+              <Scatter
+                name="CRITICAL"
+                data={scatterData.filter(
+                  d => d.alertLevel === 'CRITICAL'
+                )}
+                fill="#8B0000"
+                r={10}
+                shape={(props) => {
+                  const { cx, cy } = props;
+                  return (
+                    <g key={`${cx}-${cy}`}>
+                      <rect
+                        x={cx - 14} y={cy - 14} width={28} height={28}
+                        fill="rgba(139,0,0,0.15)"
+                      />
+                      <rect
+                        x={cx - 10} y={cy - 10} width={20} height={20}
+                        fill="#8B0000"
+                        stroke="rgba(139,0,0,0.5)"
+                        strokeWidth={2}
+                      />
+                    </g>
+                  );
+                }}
+              />
 
-                  {/* Medium anomalies series */}
-                  <Scatter 
-                    name="Medium Outlier" 
-                    data={anomaliesPlot.filter(a => a.level === 'MEDIUM')} 
-                    fill="#34c759" 
-                    shape="circle" 
-                  />
+              {/* HIGH dots */}
+              <Scatter
+                name="HIGH"
+                data={scatterData.filter(
+                  d => d.alertLevel === 'HIGH'
+                )}
+                fill="#FF6B35"
+                r={7}
+                shape={(props) => {
+                  const { cx, cy } = props;
+                  return (
+                    <g key={`${cx}-${cy}`}>
+                      <rect
+                        x={cx - 10} y={cy - 10} width={20} height={20}
+                        fill="rgba(255,107,53,0.15)"
+                      />
+                      <rect
+                        x={cx - 7} y={cy - 7} width={14} height={14}
+                        fill="#FF6B35"
+                        stroke="rgba(255,107,53,0.5)"
+                        strokeWidth={1.5}
+                      />
+                    </g>
+                  );
+                }}
+              />
 
-                  {/* Guidelines */}
-                  <ReferenceLine x={22} stroke="var(--red)" strokeDasharray="3 3" label={{ value: "Night Hours", fill: "var(--red)", fontSize: 9, position: 'top' }} />
-                  <ReferenceLine y={25} stroke="#ff9500" strokeDasharray="3 3" label={{ value: "Youth Range", fill: "#ff9500", fontSize: 9, position: 'right' }} />
-                  
-                  <Legend style={{ fontSize: '10px', fontFamily: 'monospace' }} />
-                </ScatterChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div style={styles.chartInstructions} className="mono">
-              * Reference lines highlight critical vectors: Late-night operations (X &gt;= 22h) and young offender clusters (Y &lt;= 25y).
-            </div>
+              {/* MEDIUM dots */}
+              <Scatter
+                name="MEDIUM"
+                data={scatterData.filter(
+                  d => d.alertLevel === 'MEDIUM'
+                )}
+                fill="#00C851"
+                r={5}
+                shape={(props) => {
+                  const { cx, cy } = props;
+                  return (
+                    <g key={`${cx}-${cy}`}>
+                      <rect
+                        x={cx - 8} y={cy - 8} width={16} height={16}
+                        fill="rgba(0,200,81,0.12)"
+                      />
+                      <rect
+                        x={cx - 5} y={cy - 5} width={10} height={10}
+                        fill="#00C851"
+                        stroke="rgba(0,200,81,0.4)"
+                        strokeWidth={1}
+                      />
+                    </g>
+                  );
+                }}
+              />
+
+            </ScatterChart>
+          </ResponsiveContainer>
+
+          {/* Axis explanation row */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '32px',
+            marginTop: '8px'
+          }}>
+            <span style={{
+              fontSize: '10px',
+              color: 'var(--text-dim)',
+              fontFamily: 'JetBrains Mono'
+            }}>
+              X — Hour crime occurred (0–23)
+            </span>
+            <span style={{
+              fontSize: '10px',
+              color: 'var(--text-dim)',
+              fontFamily: 'JetBrains Mono'
+            }}>
+              Y — Age of offender at time of incident
+            </span>
           </div>
         </div>
 
